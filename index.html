@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediaScope Planner — Census 2025 Ad Targeting Tool</title>
+<meta name="description" content="Interactive paid media planning tool powered by U.S. Census 2025 data, DMA markets, and platform reach estimates.">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body, #root { width:100%; height:100%; overflow:hidden; background:#080b12; }
+  input[type=range] { -webkit-appearance:none; appearance:none; height:4px; border-radius:2px; background:#1a2035; outline:none; cursor:pointer; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:12px; height:12px; border-radius:50%; background:#4fd1a5; cursor:pointer; }
+  input[type=range]::-moz-range-thumb { width:12px; height:12px; border-radius:50%; background:#4fd1a5; border:none; cursor:pointer; }
+  input[type=checkbox] { accent-color:#4fd1a5; }
+  ::-webkit-scrollbar { width:5px; }
+  ::-webkit-scrollbar-track { background:#0c1019; }
+  ::-webkit-scrollbar-thumb { background:#1e2740; border-radius:3px; }
+  ::-webkit-scrollbar-thumb:hover { background:#2a3555; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useMemo, useCallback } = React;
+
+// ══════════════════════════════════════════════════════════════
+// EMBEDDED DATA
+// ══════════════════════════════════════════════════════════════
+
+const STATE_DATA = [
+  {fips:"01",name:"Alabama",abbr:"AL",pop2025:5193088,pop2024:5161442,pop2020:5024803,births:57680,deaths:59868,intlMig:8946,domMig:23358,medAge:39.3,urban:58,white:65.36,black:26.09,hisp:4.6,topEmployer:"Redstone Arsenal",capital:"Montgomery",zipRange:"35001-36999"},
+  {fips:"02",name:"Alaska",abbr:"AK",pop2025:737270,pop2024:735560,pop2020:733603,births:8867,deaths:5559,intlMig:1959,domMig:-4525,medAge:35.8,urban:65,white:60.7,black:3.2,hisp:7.8,topEmployer:"Providence Health",capital:"Juneau",zipRange:"99501-99999"},
+  {fips:"04",name:"Arizona",abbr:"AZ",pop2025:7623818,pop2024:7432670,pop2020:7151507,births:78926,deaths:71277,intlMig:28219,domMig:31107,medAge:39.0,urban:89,white:63.2,black:4.5,hisp:24.4,topEmployer:"Banner Health",capital:"Phoenix",zipRange:"85001-86599"},
+  {fips:"05",name:"Arkansas",abbr:"AR",pop2025:3114791,pop2024:3078116,pop2020:3011873,births:35414,deaths:36638,intlMig:5470,domMig:14475,medAge:38.5,urban:55,white:70.86,black:14.91,hisp:8.5,topEmployer:"Walmart",capital:"Little Rock",zipRange:"71601-72999"},
+  {fips:"06",name:"California",abbr:"CA",pop2025:39355309,pop2024:39431263,pop2020:39538223,births:398632,deaths:288917,intlMig:109278,domMig:-229077,medAge:37.9,urban:94,white:43.95,black:5.6,hisp:33.7,topEmployer:"Univ. of California",capital:"Sacramento",zipRange:"90001-96199"},
+  {fips:"08",name:"Colorado",abbr:"CO",pop2025:6012561,pop2024:5957685,pop2020:5773714,births:65380,deaths:44772,intlMig:15356,domMig:-12100,medAge:37.7,urban:86,white:73.46,black:4.1,hisp:18.1,topEmployer:"Univ. of Colorado",capital:"Denver",zipRange:"80000-81699"},
+  {fips:"09",name:"Connecticut",abbr:"CT",pop2025:3688496,pop2024:3666850,pop2020:3605944,births:34700,deaths:32417,intlMig:17534,domMig:-5945,medAge:41.1,urban:86,white:67.57,black:10.69,hisp:17.3,topEmployer:"Yale New Haven",capital:"Hartford",zipRange:"06001-06999"},
+  {fips:"10",name:"Delaware",abbr:"DE",pop2025:1059952,pop2024:1038184,pop2020:989948,births:10328,deaths:10882,intlMig:3473,domMig:6855,medAge:41.6,urban:83,white:61.82,black:21.94,hisp:9.9,topEmployer:"ChristianaCare",capital:"Dover",zipRange:"19700-19999"},
+  {fips:"11",name:"District of Columbia",abbr:"DC",pop2025:693645,pop2024:687693,pop2020:689545,births:7336,deaths:4820,intlMig:3915,domMig:-4128,medAge:34.8,urban:100,white:38.0,black:44.0,hisp:11.3,topEmployer:"Federal Gov.",capital:"Washington",zipRange:"20001-20599"},
+  {fips:"12",name:"Florida",abbr:"FL",pop2025:23462518,pop2024:23121786,pop2020:21538187,births:225971,deaths:227304,intlMig:178674,domMig:22517,medAge:42.6,urban:92,white:59.91,black:15.1,hisp:21.5,topEmployer:"Publix",capital:"Tallahassee",zipRange:"32001-34999"},
+  {fips:"13",name:"Georgia",abbr:"GA",pop2025:11302748,pop2024:11108044,pop2020:10711908,births:126446,deaths:97815,intlMig:42579,domMig:27333,medAge:37.6,urban:74,white:52.46,black:31.34,hisp:10.5,topEmployer:"Walmart",capital:"Atlanta",zipRange:"30001-31999"},
+  {fips:"15",name:"Hawaii",abbr:"HI",pop2025:1432820,pop2024:1440084,pop2020:1455271,births:14631,deaths:12607,intlMig:4768,domMig:-8876,medAge:40.9,urban:86,white:22.51,black:1.6,hisp:10.7,topEmployer:"Univ. of Hawaii",capital:"Honolulu",zipRange:"96701-96899"},
+  {fips:"16",name:"Idaho",abbr:"ID",pop2025:2029733,pop2024:1994290,pop2020:1839106,births:23695,deaths:16795,intlMig:2148,domMig:19915,medAge:37.3,urban:69,white:83.35,black:0.9,hisp:13.0,topEmployer:"St. Luke's Health",capital:"Boise",zipRange:"83201-83899"},
+  {fips:"17",name:"Illinois",abbr:"IL",pop2025:12719141,pop2024:12742381,pop2020:12812508,births:125129,deaths:114226,intlMig:44752,domMig:-40017,medAge:39.0,urban:87,white:63.33,black:13.79,hisp:18.2,topEmployer:"Walmart",capital:"Springfield",zipRange:"60001-62999"},
+  {fips:"18",name:"Indiana",abbr:"IN",pop2025:6973333,pop2024:6903880,pop2020:6785528,births:79648,deaths:71087,intlMig:17852,domMig:12197,medAge:38.1,urban:71,white:78.51,black:9.4,hisp:8.2,topEmployer:"Walmart",capital:"Indianapolis",zipRange:"46001-47999"},
+  {fips:"19",name:"Iowa",abbr:"IA",pop2025:3238387,pop2024:3221410,pop2020:3190369,births:36470,deaths:33521,intlMig:5903,domMig:-970,medAge:38.6,urban:63,white:85.59,black:3.8,hisp:6.8,topEmployer:"Univ. of Iowa",capital:"Des Moines",zipRange:"50001-52899"},
+  {fips:"20",name:"Kansas",abbr:"KS",pop2025:2977220,pop2024:2964093,pop2020:2937880,births:34416,deaths:29465,intlMig:7440,domMig:-519,medAge:37.4,urban:72,white:77.92,black:5.8,hisp:12.8,topEmployer:"Walmart",capital:"Topeka",zipRange:"66001-67999"},
+  {fips:"21",name:"Kentucky",abbr:"KY",pop2025:4606864,pop2024:4568067,pop2020:4505836,births:52982,deaths:53065,intlMig:15709,domMig:7269,medAge:39.1,urban:59,white:83.68,black:8.0,hisp:4.5,topEmployer:"Walmart",capital:"Frankfort",zipRange:"40001-42799"},
+  {fips:"22",name:"Louisiana",abbr:"LA",pop2025:4618189,pop2024:4622779,pop2020:4657757,births:51886,deaths:49112,intlMig:14900,domMig:-14387,medAge:38.0,urban:72,white:57.97,black:31.05,hisp:6.9,topEmployer:"Walmart",capital:"Baton Rouge",zipRange:"70000-71499"},
+  {fips:"23",name:"Maine",abbr:"ME",pop2025:1414874,pop2024:1401247,pop2020:1362359,births:11783,deaths:16802,intlMig:4040,domMig:7406,medAge:44.8,urban:39,white:91.34,black:1.4,hisp:2.0,topEmployer:"Maine Medical Ctr",capital:"Augusta",zipRange:"03901-04999"},
+  {fips:"24",name:"Maryland",abbr:"MD",pop2025:6265347,pop2024:6261283,pop2020:6177224,births:66614,deaths:57165,intlMig:29764,domMig:-19267,medAge:39.4,urban:86,white:49.6,black:29.59,hisp:11.8,topEmployer:"Giant Food",capital:"Annapolis",zipRange:"20601-21999"},
+  {fips:"25",name:"Massachusetts",abbr:"MA",pop2025:7154084,pop2024:7127816,pop2020:7029917,births:67076,deaths:60660,intlMig:36693,domMig:-19023,medAge:40.0,urban:91,white:70.73,black:7.0,hisp:13.0,topEmployer:"Mass Gen Brigham",capital:"Boston",zipRange:"01001-02799"},
+  {fips:"26",name:"Michigan",abbr:"MI",pop2025:10127884,pop2024:10106172,pop2020:10077331,births:104780,deaths:107792,intlMig:24627,domMig:-8137,medAge:40.2,urban:73,white:74.78,black:13.4,hisp:5.6,topEmployer:"General Motors",capital:"Lansing",zipRange:"48001-49999"},
+  {fips:"27",name:"Minnesota",abbr:"MN",pop2025:5830405,pop2024:5795484,pop2020:5706494,births:64764,deaths:51082,intlMig:17843,domMig:-5782,medAge:38.8,urban:72,white:78.35,black:6.4,hisp:6.1,topEmployer:"Mayo Clinic",capital:"Saint Paul",zipRange:"55001-56799"},
+  {fips:"28",name:"Mississippi",abbr:"MS",pop2025:2954160,pop2024:2962052,pop2020:2961279,births:34312,deaths:35825,intlMig:3581,domMig:-3744,medAge:38.6,urban:46,white:56.31,black:36.96,hisp:3.6,topEmployer:"Walmart",capital:"Jackson",zipRange:"38601-39799"},
+  {fips:"29",name:"Missouri",abbr:"MO",pop2025:6270541,pop2024:6243960,pop2020:6154913,births:68944,deaths:69182,intlMig:14152,domMig:13174,medAge:39.0,urban:69,white:78.33,black:11.4,hisp:4.7,topEmployer:"Walmart",capital:"Jefferson City",zipRange:"63001-65899"},
+  {fips:"30",name:"Montana",abbr:"MT",pop2025:1144694,pop2024:1130906,pop2020:1084225,births:11227,deaths:11723,intlMig:1270,domMig:10193,medAge:40.4,urban:53,white:85.68,black:0.4,hisp:4.3,topEmployer:"Talen Montana",capital:"Helena",zipRange:"59000-59999"},
+  {fips:"31",name:"Nebraska",abbr:"NE",pop2025:2018006,pop2024:2000510,pop2020:1961504,births:24516,deaths:18913,intlMig:7076,domMig:-2052,medAge:37.2,urban:73,white:79.88,black:4.8,hisp:12.3,topEmployer:"Univ. of Nebraska",capital:"Lincoln",zipRange:"68001-69399"},
+  {fips:"32",name:"Nevada",abbr:"NV",pop2025:3282188,pop2024:3231155,pop2020:3104614,births:33996,deaths:28262,intlMig:14152,domMig:16627,medAge:39.1,urban:94,white:53.18,black:9.4,hisp:26.6,topEmployer:"MGM Resorts",capital:"Carson City",zipRange:"88901-89999"},
+  {fips:"33",name:"New Hampshire",abbr:"NH",pop2025:1415342,pop2024:1403680,pop2020:1377529,births:12072,deaths:13779,intlMig:4379,domMig:3508,medAge:43.3,urban:58,white:88.93,black:1.5,hisp:4.3,topEmployer:"Walmart",capital:"Concord",zipRange:"03001-03899"},
+  {fips:"34",name:"New Jersey",abbr:"NJ",pop2025:9548215,pop2024:9488027,pop2020:9288994,births:97048,deaths:82009,intlMig:57340,domMig:-22508,medAge:40.1,urban:94,white:56.93,black:12.8,hisp:21.7,topEmployer:"Wakefern Food",capital:"Trenton",zipRange:"07001-08999"},
+  {fips:"35",name:"New Mexico",abbr:"NM",pop2025:2125498,pop2024:2122036,pop2020:2117522,births:22008,deaths:21393,intlMig:5011,domMig:-2048,medAge:39.4,urban:75,white:53.62,black:1.8,hisp:49.3,topEmployer:"Univ. of NM",capital:"Santa Fe",zipRange:"87001-88499"},
+  {fips:"36",name:"New York",abbr:"NY",pop2025:20002427,pop2024:20193828,pop2020:20201249,births:209968,deaths:165510,intlMig:119756,domMig:-155853,medAge:39.8,urban:87,white:57.07,black:14.73,hisp:19.5,topEmployer:"Northwell Health",capital:"Albany",zipRange:"10001-14999"},
+  {fips:"37",name:"North Carolina",abbr:"NC",pop2025:11197968,pop2024:10974786,pop2020:10439388,births:121414,deaths:102498,intlMig:42427,domMig:56429,medAge:39.1,urban:67,white:63.26,black:20.58,hisp:10.7,topEmployer:"Walmart",capital:"Raleigh",zipRange:"27001-28999"},
+  {fips:"38",name:"North Dakota",abbr:"ND",pop2025:799358,pop2024:793717,pop2020:779094,births:9818,deaths:7595,intlMig:4067,domMig:-1766,medAge:35.9,urban:61,white:83.89,black:3.2,hisp:4.4,topEmployer:"Sanford Health",capital:"Bismarck",zipRange:"58000-58899"},
+  {fips:"39",name:"Ohio",abbr:"OH",pop2025:11900510,pop2024:11866145,pop2020:11799448,births:127513,deaths:131459,intlMig:31858,domMig:-5449,medAge:39.7,urban:76,white:77.82,black:12.28,hisp:4.4,topEmployer:"Walmart",capital:"Columbus",zipRange:"43001-45999"},
+  {fips:"40",name:"Oklahoma",abbr:"OK",pop2025:4123288,pop2024:4085654,pop2020:3959353,births:48706,deaths:44252,intlMig:7777,domMig:17009,medAge:37.0,urban:65,white:66.79,black:7.1,hisp:12.1,topEmployer:"Walmart",capital:"Oklahoma City",zipRange:"73001-74999"},
+  {fips:"41",name:"Oregon",abbr:"OR",pop2025:4273586,pop2024:4262776,pop2020:4237256,births:39816,deaths:41093,intlMig:12789,domMig:-2927,medAge:40.4,urban:80,white:76.62,black:1.8,hisp:14.0,topEmployer:"Intel",capital:"Salem",zipRange:"97001-97999"},
+  {fips:"42",name:"Pennsylvania",abbr:"PA",pop2025:13059432,pop2024:13049017,pop2020:13002700,births:125860,deaths:142277,intlMig:40816,domMig:-29270,medAge:40.9,urban:76,white:75.8,black:10.73,hisp:8.4,topEmployer:"UPMC",capital:"Harrisburg",zipRange:"15001-19699"},
+  {fips:"44",name:"Rhode Island",abbr:"RI",pop2025:1114521,pop2024:1110643,pop2020:1097379,births:10656,deaths:11277,intlMig:4872,domMig:-2281,medAge:40.6,urban:91,white:72.34,black:5.7,hisp:16.6,topEmployer:"Lifespan Health",capital:"Providence",zipRange:"02801-02999"},
+  {fips:"45",name:"South Carolina",abbr:"SC",pop2025:5570274,pop2024:5468766,pop2020:5118425,births:57356,deaths:56688,intlMig:14260,domMig:43289,medAge:40.2,urban:68,white:64.06,black:25.3,hisp:7.0,topEmployer:"Walmart",capital:"Columbia",zipRange:"29001-29999"},
+  {fips:"46",name:"South Dakota",abbr:"SD",pop2025:935094,pop2024:924279,pop2020:886667,births:11463,deaths:9365,intlMig:2541,domMig:2530,medAge:38.0,urban:57,white:81.52,black:2.2,hisp:4.5,topEmployer:"Sanford Health",capital:"Pierre",zipRange:"57001-57799"},
+  {fips:"47",name:"Tennessee",abbr:"TN",pop2025:7315076,pop2024:7213232,pop2020:6910840,births:81180,deaths:79296,intlMig:22267,domMig:38282,medAge:38.9,urban:66,white:73.48,black:15.87,hisp:6.7,topEmployer:"Walmart",capital:"Nashville",zipRange:"37001-38599"},
+  {fips:"48",name:"Texas",abbr:"TX",pop2025:31709821,pop2024:31164182,pop2020:29145505,births:376380,deaths:220932,intlMig:119534,domMig:69268,medAge:35.6,urban:84,white:53.93,black:12.23,hisp:27.8,topEmployer:"Walmart",capital:"Austin",zipRange:"75001-79999"},
+  {fips:"49",name:"Utah",abbr:"UT",pop2025:3538904,pop2024:3474651,pop2020:3271616,births:48506,deaths:21981,intlMig:6992,domMig:13543,medAge:32.0,urban:90,white:80.7,black:1.2,hisp:15.1,topEmployer:"Intermountain",capital:"Salt Lake City",zipRange:"84001-84799"},
+  {fips:"50",name:"Vermont",abbr:"VT",pop2025:648063,pop2024:646545,pop2020:643077,births:5371,deaths:6900,intlMig:1913,domMig:662,medAge:43.1,urban:35,white:91.41,black:1.2,hisp:2.3,topEmployer:"UVM Medical Ctr",capital:"Montpelier",zipRange:"05001-05999"},
+  {fips:"51",name:"Virginia",abbr:"VA",pop2025:8880107,pop2024:8810893,pop2020:8631393,births:94906,deaths:72651,intlMig:36192,domMig:-9519,medAge:39.0,urban:76,white:61.73,black:18.75,hisp:10.8,topEmployer:"Mars Inc.",capital:"Richmond",zipRange:"22001-24699"},
+  {fips:"53",name:"Washington",abbr:"WA",pop2025:8001020,pop2024:7919273,pop2020:7705281,births:86028,deaths:62605,intlMig:32792,domMig:-9389,medAge:38.3,urban:83,white:67.84,black:3.7,hisp:14.0,topEmployer:"Amazon",capital:"Olympia",zipRange:"98001-99499"},
+  {fips:"54",name:"West Virginia",abbr:"WV",pop2025:1766147,pop2024:1771860,pop2020:1793716,births:17218,deaths:24860,intlMig:2504,domMig:-3155,medAge:42.7,urban:45,white:90.9,black:3.5,hisp:1.8,topEmployer:"WVU Medicine",capital:"Charleston",zipRange:"24701-26899"},
+  {fips:"55",name:"Wisconsin",abbr:"WI",pop2025:5972787,pop2024:5946901,pop2020:5893718,births:60672,deaths:58445,intlMig:16227,domMig:-1773,medAge:40.2,urban:67,white:81.32,black:6.2,hisp:7.6,topEmployer:"Univ. of Wisconsin",capital:"Madison",zipRange:"53001-54999"},
+  {fips:"56",name:"Wyoming",abbr:"WY",pop2025:592720,pop2024:586485,pop2020:576851,births:6213,deaths:5493,intlMig:605,domMig:3823,medAge:39.1,urban:62,white:85.96,black:0.8,hisp:10.6,topEmployer:"Walmart",capital:"Cheyenne",zipRange:"82001-83199"},
+];
+
+const DMA_DATA = [
+  {rank:1,market:"New York",tvHH:7841830,pct:6.25,lat:40.7128,lon:-74.006},
+  {rank:2,market:"Los Angeles",tvHH:5904400,pct:4.70,lat:34.0522,lon:-118.244},
+  {rank:3,market:"Chicago",tvHH:3751900,pct:2.99,lat:41.8781,lon:-87.6298},
+  {rank:4,market:"Dallas-Ft. Worth",tvHH:3298630,pct:2.63,lat:32.7767,lon:-96.797},
+  {rank:5,market:"Philadelphia",tvHH:3174280,pct:2.53,lat:39.9526,lon:-75.1652},
+  {rank:6,market:"Houston",tvHH:2919480,pct:2.33,lat:29.7604,lon:-95.3698},
+  {rank:7,market:"Atlanta",tvHH:2803210,pct:2.23,lat:33.749,lon:-84.388},
+  {rank:8,market:"Washington, D.C.",tvHH:2692300,pct:2.15,lat:38.9072,lon:-77.0369},
+  {rank:9,market:"San Francisco",tvHH:2611450,pct:2.08,lat:37.7749,lon:-122.419},
+  {rank:10,market:"Boston",tvHH:2599640,pct:2.07,lat:42.3601,lon:-71.0589},
+  {rank:11,market:"Tampa-St. Pete",tvHH:2283670,pct:1.82,lat:27.9506,lon:-82.4572},
+  {rank:12,market:"Phoenix",tvHH:2250310,pct:1.79,lat:33.4484,lon:-112.074},
+  {rank:13,market:"Seattle-Tacoma",tvHH:2145510,pct:1.71,lat:47.6062,lon:-122.332},
+  {rank:14,market:"Detroit",tvHH:1971580,pct:1.57,lat:42.3314,lon:-83.0458},
+  {rank:15,market:"Orlando",tvHH:1967250,pct:1.57,lat:28.5383,lon:-81.3792},
+  {rank:16,market:"Minneapolis-St. Paul",tvHH:1921880,pct:1.53,lat:44.9778,lon:-93.265},
+  {rank:17,market:"Denver",tvHH:1853860,pct:1.48,lat:39.7392,lon:-104.991},
+  {rank:18,market:"Miami-Ft. Lauderdale",tvHH:1818820,pct:1.45,lat:25.7617,lon:-80.1918},
+  {rank:19,market:"Cleveland-Akron",tvHH:1562740,pct:1.25,lat:41.4993,lon:-81.6944},
+  {rank:20,market:"Sacramento",tvHH:1554500,pct:1.24,lat:38.5816,lon:-121.494},
+  {rank:21,market:"Charlotte",tvHH:1431200,pct:1.14,lat:35.2271,lon:-80.8431},
+  {rank:22,market:"Raleigh-Durham",tvHH:1375650,pct:1.10,lat:35.7796,lon:-78.6382},
+  {rank:23,market:"Portland, OR",tvHH:1287980,pct:1.03,lat:45.5152,lon:-122.679},
+  {rank:24,market:"St. Louis",tvHH:1260410,pct:1.00,lat:38.627,lon:-90.1994},
+  {rank:25,market:"Nashville",tvHH:1249620,pct:1.00,lat:36.1627,lon:-86.7816},
+  {rank:26,market:"Indianapolis",tvHH:1248430,pct:0.99,lat:39.7684,lon:-86.1581},
+  {rank:27,market:"Salt Lake City",tvHH:1177360,pct:0.94,lat:40.7608,lon:-111.891},
+  {rank:28,market:"Pittsburgh",tvHH:1163160,pct:0.93,lat:40.4406,lon:-79.9959},
+  {rank:29,market:"Baltimore",tvHH:1162820,pct:0.93,lat:39.2904,lon:-76.6122},
+  {rank:30,market:"San Diego",tvHH:1142730,pct:0.91,lat:32.7157,lon:-117.161},
+  {rank:31,market:"San Antonio",tvHH:1112950,pct:0.89,lat:29.4241,lon:-98.4936},
+  {rank:32,market:"Austin",tvHH:1074520,pct:0.86,lat:30.2672,lon:-97.7431},
+  {rank:33,market:"Hartford-New Haven",tvHH:1073870,pct:0.86,lat:41.7658,lon:-72.6734},
+  {rank:34,market:"Columbus, OH",tvHH:1051690,pct:0.84,lat:39.9612,lon:-82.9988},
+  {rank:35,market:"Kansas City",tvHH:1050260,pct:0.84,lat:39.0997,lon:-94.5786},
+  {rank:36,market:"Greenville-Spartanburg",tvHH:992700,pct:0.79,lat:34.8526,lon:-82.3940},
+  {rank:37,market:"West Palm Beach",tvHH:972630,pct:0.77,lat:26.7153,lon:-80.0534},
+  {rank:38,market:"Cincinnati",tvHH:966430,pct:0.77,lat:39.1031,lon:-84.512},
+  {rank:39,market:"Milwaukee",tvHH:957240,pct:0.76,lat:43.0389,lon:-87.9065},
+  {rank:40,market:"Las Vegas",tvHH:925260,pct:0.74,lat:36.1699,lon:-115.140},
+  {rank:41,market:"Jacksonville",tvHH:845890,pct:0.67,lat:30.3322,lon:-81.6557},
+  {rank:42,market:"Harrisburg-Lancaster",tvHH:809240,pct:0.64,lat:40.2732,lon:-76.8867},
+  {rank:43,market:"Grand Rapids",tvHH:808010,pct:0.64,lat:42.9634,lon:-85.6681},
+  {rank:44,market:"Norfolk-Portsmouth",tvHH:783500,pct:0.62,lat:36.8508,lon:-76.2859},
+  {rank:45,market:"Oklahoma City",tvHH:777860,pct:0.62,lat:35.4676,lon:-97.5164},
+  {rank:46,market:"Birmingham",tvHH:777400,pct:0.62,lat:33.5207,lon:-86.8025},
+  {rank:47,market:"Greensboro",tvHH:773020,pct:0.62,lat:36.0726,lon:-79.792},
+  {rank:48,market:"Louisville",tvHH:724710,pct:0.58,lat:38.2527,lon:-85.7585},
+  {rank:49,market:"Albuquerque",tvHH:716200,pct:0.57,lat:35.0844,lon:-106.651},
+  {rank:50,market:"New Orleans",tvHH:685140,pct:0.55,lat:29.9511,lon:-90.0715},
+];
+
+const PLATFORM_DATA = [
+  {name:"YouTube",dauUS:"157.5M",mauUS:"254M",pctPop:46,color:"#FF0000"},
+  {name:"Facebook",dauUS:"143.6M",mauUS:"210M",pctPop:42,color:"#1877F2"},
+  {name:"Instagram",dauUS:"94.4M",mauUS:"172M",pctPop:28,color:"#E4405F"},
+  {name:"TikTok",dauUS:"81.5M",mauUS:"136M",pctPop:24,color:"#000000"},
+  {name:"Snapchat",dauUS:"53.0M",mauUS:"106M",pctPop:16,color:"#FFFC00"},
+  {name:"Reddit",dauUS:"51.6M",mauUS:"94M",pctPop:15,color:"#FF4500"},
+  {name:"X (Twitter)",dauUS:"46.8M",mauUS:"104M",pctPop:14,color:"#1DA1F2"},
+  {name:"Pinterest",dauUS:"~31M",mauUS:"98M",pctPop:9,color:"#BD081C"},
+];
+
+const CENSUS_REGIONS = {
+  Northeast:["CT","ME","MA","NH","RI","VT","NJ","NY","PA"],
+  Midwest:["IL","IN","IA","KS","MI","MN","MO","NE","ND","OH","SD","WI"],
+  South:["AL","AR","DE","DC","FL","GA","KY","LA","MD","MS","NC","OK","SC","TN","TX","VA","WV"],
+  West:["AK","AZ","CA","CO","HI","ID","MT","NV","NM","OR","UT","WA","WY"],
+};
+
+const STATE_PATHS = {"AL":"M628,396 L626,440 L620,442 L618,458 L630,460 L632,396 Z","AK":"M110,475 L160,475 L170,510 L130,520 L100,500 Z","AZ":"M200,370 L250,370 L260,430 L195,430 Z","AR":"M545,395 L595,395 L595,435 L545,435 Z","CA":"M115,235 L145,230 L170,310 L170,380 L130,400 L115,350 Z","CO":"M280,290 L350,290 L350,340 L280,340 Z","CT":"M810,195 L830,190 L835,205 L815,210 Z","DE":"M775,280 L785,275 L788,295 L778,295 Z","DC":"M760,280 L765,278 L766,284 L761,284 Z","FL":"M660,450 L720,440 L740,485 L700,520 L675,485 Z","GA":"M660,390 L700,385 L710,440 L660,445 Z","HI":"M310,495 L340,490 L345,505 L315,508 Z","ID":"M215,180 L245,175 L255,260 L220,270 Z","IL":"M580,260 L610,260 L615,340 L580,345 Z","IN":"M620,265 L650,265 L650,335 L620,335 Z","IA":"M510,240 L575,240 L575,285 L510,285 Z","KS":"M410,315 L500,315 L500,360 L410,360 Z","KY":"M620,330 L700,320 L705,355 L620,360 Z","LA":"M545,440 L590,435 L600,475 L555,480 Z","ME":"M835,115 L855,105 L860,160 L840,170 Z","MD":"M730,270 L775,265 L778,290 L730,295 Z","MA":"M820,180 L850,175 L852,190 L822,195 Z","MI":"M600,185 L650,175 L660,245 L610,255 Z","MN":"M490,150 L550,150 L555,225 L495,230 Z","MS":"M590,400 L620,395 L625,455 L590,460 Z","MO":"M520,310 L580,305 L585,370 L520,375 Z","MT":"M240,135 L340,130 L345,185 L245,190 Z","NE":"M380,265 L470,260 L475,305 L385,310 Z","NV":"M160,240 L200,235 L210,340 L165,350 Z","NH":"M830,145 L842,140 L845,175 L833,178 Z","NJ":"M785,230 L800,225 L805,270 L790,275 Z","NM":"M250,370 L320,365 L325,440 L255,445 Z","NY":"M740,160 L810,150 L820,210 L750,220 Z","NC":"M670,350 L760,340 L765,375 L675,385 Z","ND":"M400,145 L475,140 L478,185 L405,190 Z","OH":"M650,260 L700,255 L705,315 L655,320 Z","OK":"M400,365 L500,360 L505,405 L405,410 Z","OR":"M125,170 L200,165 L205,225 L130,230 Z","PA":"M710,225 L780,220 L785,265 L715,270 Z","RI":"M835,195 L845,193 L847,205 L837,207 Z","SC":"M685,380 L730,375 L735,410 L690,415 Z","SD":"M390,195 L470,190 L475,240 L395,245 Z","TN":"M600,355 L700,345 L705,375 L605,385 Z","TX":"M350,385 L500,375 L520,490 L380,500 L340,440 Z","UT":"M220,260 L275,255 L280,340 L225,345 Z","VT":"M815,140 L828,137 L830,170 L818,173 Z","VA":"M690,300 L770,290 L775,335 L695,345 Z","WA":"M140,110 L215,105 L220,170 L145,175 Z","WV":"M690,290 L730,285 L735,330 L695,335 Z","WI":"M545,170 L595,165 L600,240 L550,245 Z","WY":"M260,205 L340,200 L345,255 L265,260 Z"};
+
+// ══════════════════════════════════════════════════════════════
+// UTILITIES
+// ══════════════════════════════════════════════════════════════
+const fmt = (n) => n != null ? n.toLocaleString('en-US') : '—';
+const fmtPct = (n, d=1) => n != null ? n.toFixed(d) + '%' : '—';
+const fmtCompact = (n) => {
+  if (n >= 1e9) return (n/1e9).toFixed(1) + 'B';
+  if (n >= 1e6) return (n/1e6).toFixed(1) + 'M';
+  if (n >= 1e3) return (n/1e3).toFixed(1) + 'K';
+  return n != null ? n.toString() : '—';
+};
+
+// ══════════════════════════════════════════════════════════════
+// SUB-COMPONENTS
+// ══════════════════════════════════════════════════════════════
+function FilterSection({ title, children }) {
+  return (
+    <div>
+      <div style={{fontSize:10,fontWeight:600,color:'#4a5568',letterSpacing:0.8,textTransform:'uppercase',marginBottom:8}}>{title}</div>
+      {children}
+    </div>
+  );
+}
+
+function RangeSlider({ label, value, min, max, step, onChange, format }) {
+  return (
+    <div style={{marginBottom:6}}>
+      <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}>
+        <span style={{fontSize:10,color:'#5a6478'}}>{label}</span>
+        <span style={{fontSize:10,color:'#c8cdd8',fontFamily:'"JetBrains Mono",monospace'}}>{format(value)}</span>
+      </div>
+      <input type="range" min={min} max={max} step={step} value={value}
+        onChange={e => onChange(Number(e.target.value))}
+        style={{width:'100%'}}/>
+    </div>
+  );
+}
+
+function MetricCard({ label, value, color }) {
+  return (
+    <div style={{background:'#0e1218',borderRadius:8,padding:'10px 12px',border:'1px solid #1a2035'}}>
+      <div style={{fontSize:9,color:'#4a5568',letterSpacing:0.5,marginBottom:4,textTransform:'uppercase'}}>{label}</div>
+      <div style={{fontSize:18,fontWeight:700,color:color,fontFamily:'"JetBrains Mono",monospace',letterSpacing:-0.5}}>{value}</div>
+    </div>
+  );
+}
+
+function EmptyState({ message }) {
+  return (
+    <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:300,textAlign:'center',padding:20}}>
+      <div style={{width:56,height:56,borderRadius:16,background:'#0e1a24',border:'1px solid #1e2b40',display:'flex',alignItems:'center',justifyContent:'center',marginBottom:16,fontSize:24}}>🎯</div>
+      <div style={{fontSize:12,color:'#4a5568',maxWidth:240,lineHeight:1.6}}>{message}</div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// MAIN APP
+// ══════════════════════════════════════════════════════════════
+function App() {
+  const [selectedStates, setSelectedStates] = useState(new Set());
+  const [selectedRegion, setSelectedRegion] = useState(null);
+  const [selectedDMAs, setSelectedDMAs] = useState(new Set());
+  const [hoveredState, setHoveredState] = useState(null);
+  const [popMin, setPopMin] = useState(0);
+  const [popMax, setPopMax] = useState(50000000);
+  const [medAgeMin, setMedAgeMin] = useState(25);
+  const [medAgeMax, setMedAgeMax] = useState(55);
+  const [urbanMin, setUrbanMin] = useState(0);
+  const [growthFilter, setGrowthFilter] = useState("all");
+  const [dmaRankMax, setDmaRankMax] = useState(50);
+  const [selectedPlatforms, setSelectedPlatforms] = useState(new Set(PLATFORM_DATA.map(p => p.name)));
+  const [activeTab, setActiveTab] = useState("geo");
+  const [mapView, setMapView] = useState("population");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  const filteredStates = useMemo(() => {
+    return STATE_DATA.filter(s => {
+      const growthPct = ((s.pop2025 - s.pop2020) / s.pop2020) * 100;
+      if (s.pop2025 < popMin || s.pop2025 > popMax) return false;
+      if (s.medAge < medAgeMin || s.medAge > medAgeMax) return false;
+      if (s.urban < urbanMin) return false;
+      if (growthFilter === "growing" && growthPct <= 0) return false;
+      if (growthFilter === "declining" && growthPct > 0) return false;
+      return true;
+    });
+  }, [popMin, popMax, medAgeMin, medAgeMax, urbanMin, growthFilter]);
+
+  const filteredAbbrs = useMemo(() => new Set(filteredStates.map(s => s.abbr)), [filteredStates]);
+
+  const handleRegionSelect = useCallback((region) => {
+    if (selectedRegion === region) { setSelectedRegion(null); setSelectedStates(new Set()); }
+    else { setSelectedRegion(region); setSelectedStates(new Set((CENSUS_REGIONS[region]||[]).filter(a => filteredAbbrs.has(a)))); }
+  }, [selectedRegion, filteredAbbrs]);
+
+  const toggleState = useCallback((abbr) => {
+    setSelectedRegion(null);
+    setSelectedStates(prev => { const n = new Set(prev); if (n.has(abbr)) n.delete(abbr); else n.add(abbr); return n; });
+  }, []);
+
+  const toggleDMA = useCallback((rank) => {
+    setSelectedDMAs(prev => { const n = new Set(prev); if (n.has(rank)) n.delete(rank); else n.add(rank); return n; });
+  }, []);
+
+  const selectAllFiltered = () => setSelectedStates(new Set(filteredStates.map(s => s.abbr)));
+  const clearSelection = () => { setSelectedStates(new Set()); setSelectedRegion(null); setSelectedDMAs(new Set()); };
+
+  const summary = useMemo(() => {
+    const sel = STATE_DATA.filter(s => selectedStates.has(s.abbr));
+    if (sel.length === 0) return null;
+    const totalPop = sel.reduce((a,s) => a + s.pop2025, 0);
+    const totalPop2020 = sel.reduce((a,s) => a + s.pop2020, 0);
+    const totalBirths = sel.reduce((a,s) => a + s.births, 0);
+    const totalDeaths = sel.reduce((a,s) => a + s.deaths, 0);
+    const totalIntlMig = sel.reduce((a,s) => a + s.intlMig, 0);
+    const totalDomMig = sel.reduce((a,s) => a + s.domMig, 0);
+    const avgAge = sel.reduce((a,s) => a + s.medAge * s.pop2025, 0) / totalPop;
+    const avgUrban = sel.reduce((a,s) => a + s.urban * s.pop2025, 0) / totalPop;
+    const growthPct = ((totalPop - totalPop2020) / totalPop2020) * 100;
+    const usPct = (totalPop / 341784857) * 100;
+    const avgWhite = sel.reduce((a,s) => a + s.white * s.pop2025, 0) / totalPop;
+    const avgBlack = sel.reduce((a,s) => a + s.black * s.pop2025, 0) / totalPop;
+    const avgHisp = sel.reduce((a,s) => a + s.hisp * s.pop2025, 0) / totalPop;
+    return { states:sel, totalPop, totalPop2020, totalBirths, totalDeaths, totalIntlMig, totalDomMig, avgAge, avgUrban, growthPct, usPct, avgWhite, avgBlack, avgHisp };
+  }, [selectedStates]);
+
+  const getStateColor = useCallback((abbr) => {
+    const s = STATE_DATA.find(st => st.abbr === abbr);
+    if (!s) return '#1a1f2e';
+    if (!filteredAbbrs.has(abbr)) return '#0d1017';
+    const isSelected = selectedStates.has(abbr);
+    const isHovered = hoveredState === abbr;
+    let intensity;
+    switch(mapView) {
+      case "population": intensity = Math.min(1, s.pop2025 / 40000000); break;
+      case "growth": intensity = Math.min(1, Math.max(0, (((s.pop2025-s.pop2020)/s.pop2020)*100 + 2) / 13)); break;
+      case "age": intensity = (s.medAge - 30) / 15; break;
+      case "urban": intensity = s.urban / 100; break;
+      default: intensity = 0.5;
+    }
+    if (isSelected) {
+      const r = Math.round(20 + intensity * 180), g = Math.round(220 - intensity * 80), b = Math.round(120 + intensity * 60);
+      return isHovered ? `rgb(${r+30},${Math.min(255,g+30)},${b+20})` : `rgb(${r},${g},${b})`;
+    }
+    const base = Math.round(25 + intensity * 50), accent = Math.round(35 + intensity * 80);
+    return isHovered ? `rgb(${base+20},${accent+20},${base+40})` : `rgb(${base},${accent},${base+15})`;
+  }, [filteredAbbrs, selectedStates, hoveredState, mapView]);
+
+  return (
+    <div style={{width:'100%',height:'100vh',display:'flex',fontFamily:'"DM Sans",system-ui,sans-serif',background:'#080b12',color:'#c8cdd8',overflow:'hidden'}}>
+
+      {/* LEFT PANEL */}
+      <div style={{width:sidebarCollapsed?48:320,minWidth:sidebarCollapsed?48:320,background:'#0c1019',borderRight:'1px solid #1a2035',display:'flex',flexDirection:'column',transition:'width 0.3s, min-width 0.3s',overflow:'hidden'}}>
+        <div style={{padding:'12px',display:'flex',alignItems:'center',justifyContent:sidebarCollapsed?'center':'space-between',borderBottom:'1px solid #1a2035',cursor:'pointer'}} onClick={()=>setSidebarCollapsed(!sidebarCollapsed)}>
+          {!sidebarCollapsed && <span style={{fontSize:11,fontWeight:600,letterSpacing:1.5,textTransform:'uppercase',color:'#4fd1a5'}}>Targeting Filters</span>}
+          <span style={{fontSize:16,color:'#4fd1a5'}}>{sidebarCollapsed?'▸':'◂'}</span>
+        </div>
+        {!sidebarCollapsed && (
+          <div style={{flex:1,overflowY:'auto',padding:'16px',display:'flex',flexDirection:'column',gap:20}}>
+            <FilterSection title="Census Region">
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6}}>
+                {Object.keys(CENSUS_REGIONS).map(r => (
+                  <button key={r} onClick={()=>handleRegionSelect(r)} style={{padding:'8px 4px',borderRadius:6,border:'1px solid',fontSize:11,fontWeight:500,cursor:'pointer',background:selectedRegion===r?'#162b22':'transparent',borderColor:selectedRegion===r?'#4fd1a5':'#1e2740',color:selectedRegion===r?'#4fd1a5':'#7a8299',transition:'all 0.15s'}}>{r}</button>
+                ))}
+              </div>
+            </FilterSection>
+            <FilterSection title="Population Range">
+              <RangeSlider label="Min" value={popMin} min={0} max={50000000} step={500000} onChange={setPopMin} format={fmtCompact}/>
+              <RangeSlider label="Max" value={popMax} min={0} max={50000000} step={500000} onChange={setPopMax} format={fmtCompact}/>
+            </FilterSection>
+            <FilterSection title="Median Age Range">
+              <RangeSlider label="Min" value={medAgeMin} min={25} max={55} step={0.5} onChange={setMedAgeMin} format={v=>v.toFixed(1)}/>
+              <RangeSlider label="Max" value={medAgeMax} min={25} max={55} step={0.5} onChange={setMedAgeMax} format={v=>v.toFixed(1)}/>
+            </FilterSection>
+            <FilterSection title="Min. Urbanization %">
+              <RangeSlider label="Urban" value={urbanMin} min={0} max={100} step={5} onChange={setUrbanMin} format={v=>v+'%'}/>
+            </FilterSection>
+            <FilterSection title="Population Growth (2020-25)">
+              <div style={{display:'flex',gap:4}}>
+                {[["all","All"],["growing","Growing"],["declining","Declining"]].map(([v,l])=>(
+                  <button key={v} onClick={()=>setGrowthFilter(v)} style={{flex:1,padding:'7px 4px',borderRadius:6,border:'1px solid',fontSize:10,fontWeight:500,cursor:'pointer',background:growthFilter===v?'#162b22':'transparent',borderColor:growthFilter===v?'#4fd1a5':'#1e2740',color:growthFilter===v?'#4fd1a5':'#7a8299'}}>{l}</button>
+                ))}
+              </div>
+            </FilterSection>
+            <FilterSection title="DMA Market Rank (Top N)">
+              <RangeSlider label="Top" value={dmaRankMax} min={5} max={50} step={5} onChange={setDmaRankMax} format={v=>v.toString()}/>
+            </FilterSection>
+            <FilterSection title="Platforms of Interest">
+              <div style={{display:'flex',flexDirection:'column',gap:4}}>
+                {PLATFORM_DATA.map(p=>(
+                  <label key={p.name} style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',padding:'4px 0',fontSize:12}}>
+                    <input type="checkbox" checked={selectedPlatforms.has(p.name)} onChange={()=>setSelectedPlatforms(prev=>{const n=new Set(prev);if(n.has(p.name))n.delete(p.name);else n.add(p.name);return n;})}/>
+                    <span style={{width:8,height:8,borderRadius:'50%',background:p.color,display:'inline-block',flexShrink:0}}/>
+                    <span style={{color:'#c8cdd8'}}>{p.name}</span>
+                    <span style={{marginLeft:'auto',color:'#5a6478',fontFamily:'"JetBrains Mono",monospace',fontSize:10}}>{p.pctPop}% US</span>
+                  </label>
+                ))}
+              </div>
+            </FilterSection>
+            <div style={{display:'flex',gap:8,paddingTop:8,borderTop:'1px solid #1a2035'}}>
+              <button onClick={selectAllFiltered} style={{flex:1,padding:'10px',borderRadius:8,border:'none',background:'#162b22',color:'#4fd1a5',fontSize:11,fontWeight:600,cursor:'pointer',letterSpacing:0.5}}>Select Matching</button>
+              <button onClick={clearSelection} style={{flex:1,padding:'10px',borderRadius:8,border:'1px solid #2a1525',background:'transparent',color:'#e06070',fontSize:11,fontWeight:600,cursor:'pointer',letterSpacing:0.5}}>Clear All</button>
+            </div>
+            <div style={{fontSize:10,color:'#3e4a60',textAlign:'center',paddingTop:4}}>{filteredStates.length} states match filters · {selectedStates.size} selected</div>
+          </div>
+        )}
+      </div>
+
+      {/* CENTER MAP */}
+      <div style={{flex:1,display:'flex',flexDirection:'column',minWidth:0}}>
+        <div style={{padding:'10px 20px',borderBottom:'1px solid #1a2035',display:'flex',alignItems:'center',justifyContent:'space-between',background:'#0a0e16'}}>
+          <div style={{display:'flex',alignItems:'center',gap:12}}>
+            <div style={{width:32,height:32,borderRadius:8,background:'linear-gradient(135deg,#4fd1a5,#2a9d8f)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,fontWeight:700,color:'#080b12'}}>M</div>
+            <div>
+              <div style={{fontSize:15,fontWeight:600,color:'#e8ecf4',letterSpacing:-0.3}}>MediaScope Planner</div>
+              <div style={{fontSize:10,color:'#4a5568',letterSpacing:0.5}}>CENSUS 2025 · DMA 2026 · PLATFORM DATA</div>
+            </div>
+          </div>
+          <div style={{display:'flex',gap:6}}>
+            {[["population","Pop Size"],["growth","Growth %"],["age","Med. Age"],["urban","Urban %"]].map(([v,l])=>(
+              <button key={v} onClick={()=>setMapView(v)} style={{padding:'6px 12px',borderRadius:6,border:'1px solid',fontSize:10,fontWeight:500,cursor:'pointer',background:mapView===v?'#162b22':'transparent',borderColor:mapView===v?'#4fd1a5':'#1e2740',color:mapView===v?'#4fd1a5':'#5a6478',transition:'all 0.15s'}}>{l}</button>
+            ))}
+          </div>
+        </div>
+        <div style={{flex:1,position:'relative',overflow:'hidden',background:'#080b12'}}>
+          <svg viewBox="60 90 830 450" style={{width:'100%',height:'100%'}} preserveAspectRatio="xMidYMid meet">
+            {[150,200,250,300,350,400,450].map(y=><line key={y} x1="60" y1={y} x2="890" y2={y} stroke="#0f1520" strokeWidth="0.5"/>)}
+            {[200,300,400,500,600,700,800].map(x=><line key={x} x1={x} y1="90" x2={x} y2="540" stroke="#0f1520" strokeWidth="0.5"/>)}
+            {STATE_DATA.map(s=>{
+              const path=STATE_PATHS[s.abbr]; if(!path)return null;
+              const isFiltered=filteredAbbrs.has(s.abbr), isSelected=selectedStates.has(s.abbr);
+              return(<g key={s.abbr}><path d={path} fill={getStateColor(s.abbr)} stroke={isSelected?'#4fd1a5':isFiltered?'#1e2b40':'#111722'} strokeWidth={isSelected?1.5:0.5} style={{cursor:isFiltered?'pointer':'default',transition:'fill 0.2s, stroke 0.2s'}} onClick={()=>isFiltered&&toggleState(s.abbr)} onMouseEnter={()=>setHoveredState(s.abbr)} onMouseLeave={()=>setHoveredState(null)}/></g>);
+            })}
+            {STATE_DATA.map(s=>{
+              const path=STATE_PATHS[s.abbr]; if(!path)return null;
+              const nums=path.match(/[\d.]+/g)?.map(Number)||[]; let cx=0,cy=0,ct=0;
+              for(let i=0;i<nums.length;i+=2){cx+=nums[i];cy+=nums[i+1];ct++;} cx/=ct;cy/=ct;
+              const isSelected=selectedStates.has(s.abbr);
+              return(<text key={s.abbr+'_l'} x={cx} y={cy} textAnchor="middle" dominantBaseline="middle" style={{fontSize:isSelected?8:6,fontWeight:isSelected?600:400,fill:isSelected?'#e8ecf4':'#3e4a60',pointerEvents:'none',fontFamily:'"DM Sans",sans-serif'}}>{s.abbr}</text>);
+            })}
+            {DMA_DATA.filter(d=>d.rank<=dmaRankMax).map(d=>{
+              const x=((d.lon+130)/65)*780+80, y=((50-d.lat)/30)*380+110;
+              const isSel=selectedDMAs.has(d.rank), r=Math.max(3,Math.sqrt(d.tvHH/500000)*3);
+              return(<g key={'dma_'+d.rank}><circle cx={x} cy={y} r={r} fill={isSel?'#f0c040':'#f0c04030'} stroke={isSel?'#f0c040':'#f0c04050'} strokeWidth={0.5} style={{cursor:'pointer',transition:'all 0.2s'}} onClick={()=>toggleDMA(d.rank)}/>{isSel&&<text x={x} y={y-r-4} textAnchor="middle" style={{fontSize:6,fill:'#f0c040',fontFamily:'"DM Sans",sans-serif',fontWeight:500}}>{d.market}</text>}</g>);
+            })}
+          </svg>
+          <div style={{position:'absolute',bottom:16,left:16,background:'#0c1019e0',borderRadius:8,padding:'10px 14px',border:'1px solid #1a2035',backdropFilter:'blur(8px)'}}>
+            <div style={{fontSize:9,fontWeight:600,color:'#4a5568',letterSpacing:1,marginBottom:6,textTransform:'uppercase'}}>{mapView==='population'?'Population Size':mapView==='growth'?'Growth 2020-25':mapView==='age'?'Median Age':'Urbanization %'}</div>
+            <div style={{display:'flex',alignItems:'center',gap:6}}><div style={{width:80,height:8,borderRadius:4,background:'linear-gradient(to right, #141c28, #1a6b50, #4fd1a5)'}}/><span style={{fontSize:8,color:'#5a6478'}}>Low → High</span></div>
+            <div style={{display:'flex',alignItems:'center',gap:6,marginTop:6}}><div style={{width:8,height:8,borderRadius:'50%',background:'#f0c040'}}/><span style={{fontSize:8,color:'#5a6478'}}>DMA Markets (click to select)</span></div>
+          </div>
+          {hoveredState && (()=>{
+            const s=STATE_DATA.find(st=>st.abbr===hoveredState); if(!s)return null;
+            const growth=((s.pop2025-s.pop2020)/s.pop2020*100);
+            return(<div style={{position:'absolute',top:16,left:'50%',transform:'translateX(-50%)',background:'#0f1520f0',borderRadius:10,padding:'12px 16px',border:'1px solid #1e2b40',backdropFilter:'blur(12px)',minWidth:220}}>
+              <div style={{fontSize:13,fontWeight:600,color:'#e8ecf4',marginBottom:6}}>{s.name}</div>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'4px 16px',fontSize:11}}>
+                <span style={{color:'#5a6478'}}>Pop 2025</span><span style={{color:'#c8cdd8',fontFamily:'"JetBrains Mono",monospace',fontSize:10}}>{fmt(s.pop2025)}</span>
+                <span style={{color:'#5a6478'}}>Growth</span><span style={{color:growth>0?'#4fd1a5':'#e06070',fontFamily:'"JetBrains Mono",monospace',fontSize:10}}>{growth>0?'+':''}{growth.toFixed(1)}%</span>
+                <span style={{color:'#5a6478'}}>Med. Age</span><span style={{color:'#c8cdd8',fontFamily:'"JetBrains Mono",monospace',fontSize:10}}>{s.medAge}</span>
+                <span style={{color:'#5a6478'}}>Urban</span><span style={{color:'#c8cdd8',fontFamily:'"JetBrains Mono",monospace',fontSize:10}}>{s.urban}%</span>
+              </div>
+            </div>);
+          })()}
+        </div>
+      </div>
+
+      {/* RIGHT PANEL */}
+      <div style={{width:380,minWidth:380,background:'#0c1019',borderLeft:'1px solid #1a2035',display:'flex',flexDirection:'column',overflow:'hidden'}}>
+        <div style={{display:'flex',borderBottom:'1px solid #1a2035'}}>
+          {[["geo","Geography"],["dma","DMA Markets"],["platforms","Platforms"],["summary","Export"]].map(([k,l])=>(
+            <button key={k} onClick={()=>setActiveTab(k)} style={{flex:1,padding:'12px 8px',border:'none',borderBottom:activeTab===k?'2px solid #4fd1a5':'2px solid transparent',background:'transparent',color:activeTab===k?'#4fd1a5':'#4a5568',fontSize:10,fontWeight:600,cursor:'pointer',letterSpacing:0.5,textTransform:'uppercase',transition:'all 0.15s'}}>{l}</button>
+          ))}
+        </div>
+        <div style={{flex:1,overflowY:'auto',padding:'16px'}}>
+
+          {activeTab==="geo" && (
+            <div style={{display:'flex',flexDirection:'column',gap:16}}>
+              {summary ? (<>
+                <div style={{background:'linear-gradient(135deg,#0e1a24,#0f2018)',borderRadius:12,padding:20,border:'1px solid #1a2b30'}}>
+                  <div style={{fontSize:10,fontWeight:600,color:'#4fd1a5',letterSpacing:1,textTransform:'uppercase',marginBottom:4}}>Estimated Reachable Population</div>
+                  <div style={{fontSize:32,fontWeight:700,color:'#e8ecf4',letterSpacing:-1,fontFamily:'"JetBrains Mono",monospace'}}>{fmt(summary.totalPop)}</div>
+                  <div style={{fontSize:12,color:'#5a6478',marginTop:4}}>{fmtPct(summary.usPct)} of U.S. · {summary.states.length} state{summary.states.length!==1?'s':''} selected</div>
+                </div>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+                  <MetricCard label="5-Year Growth" value={(summary.growthPct>0?'+':'')+summary.growthPct.toFixed(1)+'%'} color={summary.growthPct>0?'#4fd1a5':'#e06070'}/>
+                  <MetricCard label="Avg Med. Age" value={summary.avgAge.toFixed(1)} color="#7eb8da"/>
+                  <MetricCard label="Avg Urban %" value={summary.avgUrban.toFixed(0)+'%'} color="#b8a9e8"/>
+                  <MetricCard label="Annual Births" value={fmtCompact(summary.totalBirths)} color="#f0c040"/>
+                  <MetricCard label="Annual Deaths" value={fmtCompact(summary.totalDeaths)} color="#e06070"/>
+                  <MetricCard label="Net Migration" value={fmtCompact(summary.totalIntlMig+summary.totalDomMig)} color="#4fd1a5"/>
+                </div>
+                <div style={{background:'#0e1218',borderRadius:10,padding:14,border:'1px solid #1a2035'}}>
+                  <div style={{fontSize:10,fontWeight:600,color:'#4a5568',letterSpacing:1,textTransform:'uppercase',marginBottom:10}}>Weighted Ethnic Composition</div>
+                  <div style={{display:'flex',height:8,borderRadius:4,overflow:'hidden',marginBottom:8}}>
+                    <div style={{width:summary.avgWhite+'%',background:'#7eb8da',transition:'width 0.3s'}}/>
+                    <div style={{width:summary.avgBlack+'%',background:'#b8a9e8',transition:'width 0.3s'}}/>
+                    <div style={{width:summary.avgHisp+'%',background:'#f0c040',transition:'width 0.3s'}}/>
+                    <div style={{flex:1,background:'#2a3040'}}/>
+                  </div>
+                  <div style={{display:'flex',gap:12,fontSize:10}}>
+                    <span><span style={{color:'#7eb8da'}}>●</span> White {summary.avgWhite.toFixed(1)}%</span>
+                    <span><span style={{color:'#b8a9e8'}}>●</span> Black {summary.avgBlack.toFixed(1)}%</span>
+                    <span><span style={{color:'#f0c040'}}>●</span> Hispanic {summary.avgHisp.toFixed(1)}%</span>
+                  </div>
+                </div>
+                <div style={{background:'#0e1218',borderRadius:10,padding:14,border:'1px solid #1a2035'}}>
+                  <div style={{fontSize:10,fontWeight:600,color:'#4a5568',letterSpacing:1,textTransform:'uppercase',marginBottom:10}}>Growth by Selected State (2020-25)</div>
+                  <div style={{display:'flex',flexDirection:'column',gap:4,maxHeight:200,overflowY:'auto'}}>
+                    {summary.states.sort((a,b)=>{const ga=(a.pop2025-a.pop2020)/a.pop2020,gb=(b.pop2025-b.pop2020)/b.pop2020;return gb-ga;}).map(s=>{
+                      const g=((s.pop2025-s.pop2020)/s.pop2020)*100, barW=Math.abs(g)/11*100;
+                      return(<div key={s.abbr} style={{display:'flex',alignItems:'center',gap:6,fontSize:10}}>
+                        <span style={{width:24,color:'#7a8299',fontWeight:500,flexShrink:0}}>{s.abbr}</span>
+                        <div style={{flex:1,height:6,background:'#141c28',borderRadius:3,overflow:'hidden'}}><div style={{width:Math.min(100,barW)+'%',height:'100%',borderRadius:3,background:g>0?'#4fd1a5':'#e06070',transition:'width 0.3s'}}/></div>
+                        <span style={{width:44,textAlign:'right',fontFamily:'"JetBrains Mono",monospace',fontSize:9,color:g>0?'#4fd1a5':'#e06070',flexShrink:0}}>{g>0?'+':''}{g.toFixed(1)}%</span>
+                      </div>);
+                    })}
+                  </div>
+                </div>
+                <div style={{background:'#0e1218',borderRadius:10,padding:14,border:'1px solid #1a2035'}}>
+                  <div style={{fontSize:10,fontWeight:600,color:'#4a5568',letterSpacing:1,textTransform:'uppercase',marginBottom:10}}>Selected States Detail</div>
+                  <div style={{overflowX:'auto'}}>
+                    <table style={{width:'100%',borderCollapse:'collapse',fontSize:10}}>
+                      <thead><tr style={{borderBottom:'1px solid #1e2740'}}>
+                        {['State','Pop 2025','Growth','Med Age','Urban','Top Employer'].map(h=><th key={h} style={{padding:'6px 4px',textAlign:'left',color:'#4a5568',fontWeight:600,fontSize:9,letterSpacing:0.5,whiteSpace:'nowrap'}}>{h}</th>)}
+                      </tr></thead>
+                      <tbody>{summary.states.sort((a,b)=>b.pop2025-a.pop2025).map(s=>{
+                        const g=((s.pop2025-s.pop2020)/s.pop2020)*100;
+                        return(<tr key={s.abbr} style={{borderBottom:'1px solid #131a28'}}>
+                          <td style={{padding:'5px 4px',fontWeight:500,color:'#c8cdd8'}}>{s.abbr}</td>
+                          <td style={{padding:'5px 4px',fontFamily:'"JetBrains Mono",monospace',fontSize:9,color:'#c8cdd8'}}>{fmtCompact(s.pop2025)}</td>
+                          <td style={{padding:'5px 4px',fontFamily:'"JetBrains Mono",monospace',fontSize:9,color:g>0?'#4fd1a5':'#e06070'}}>{g>0?'+':''}{g.toFixed(1)}%</td>
+                          <td style={{padding:'5px 4px',fontFamily:'"JetBrains Mono",monospace',fontSize:9}}>{s.medAge}</td>
+                          <td style={{padding:'5px 4px',fontFamily:'"JetBrains Mono",monospace',fontSize:9}}>{s.urban}%</td>
+                          <td style={{padding:'5px 4px',fontSize:9,color:'#7a8299',maxWidth:80,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{s.topEmployer}</td>
+                        </tr>);
+                      })}</tbody>
+                    </table>
+                  </div>
+                </div>
+              </>) : <EmptyState message="Select states on the map or use region filters to begin your media plan"/>}
+            </div>
+          )}
+
+          {activeTab==="dma" && (
+            <div style={{display:'flex',flexDirection:'column',gap:12}}>
+              <div style={{fontSize:10,color:'#5a6478',marginBottom:4}}>Click DMA dots on the map or select below. Showing top {dmaRankMax} markets.</div>
+              {selectedDMAs.size>0 && (
+                <div style={{background:'linear-gradient(135deg,#1a1a0e,#1a180e)',borderRadius:12,padding:16,border:'1px solid #2a2820'}}>
+                  <div style={{fontSize:10,fontWeight:600,color:'#f0c040',letterSpacing:1,textTransform:'uppercase',marginBottom:4}}>Selected DMA Reach</div>
+                  <div style={{fontSize:28,fontWeight:700,color:'#e8ecf4',fontFamily:'"JetBrains Mono",monospace'}}>{fmt(DMA_DATA.filter(d=>selectedDMAs.has(d.rank)).reduce((a,d)=>a+d.tvHH,0))}</div>
+                  <div style={{fontSize:11,color:'#5a6478'}}>TV Households · {DMA_DATA.filter(d=>selectedDMAs.has(d.rank)).reduce((a,d)=>a+d.pct,0).toFixed(2)}% of U.S.</div>
+                </div>
+              )}
+              <div style={{display:'flex',flexDirection:'column',gap:2}}>
+                {DMA_DATA.filter(d=>d.rank<=dmaRankMax).map(d=>{
+                  const isSel=selectedDMAs.has(d.rank);
+                  return(<div key={d.rank} onClick={()=>toggleDMA(d.rank)} style={{display:'flex',alignItems:'center',gap:8,padding:'8px 10px',borderRadius:8,cursor:'pointer',background:isSel?'#1a1a0e':'transparent',border:'1px solid '+(isSel?'#3a3520':'transparent'),transition:'all 0.15s'}}>
+                    <span style={{width:22,height:22,borderRadius:6,display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:600,background:isSel?'#f0c040':'#1a2035',color:isSel?'#080b12':'#4a5568',flexShrink:0}}>#{d.rank}</span>
+                    <div style={{flex:1,minWidth:0}}><div style={{fontSize:11,fontWeight:500,color:'#c8cdd8',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{d.market}</div></div>
+                    <div style={{textAlign:'right',flexShrink:0}}><div style={{fontSize:10,fontFamily:'"JetBrains Mono",monospace',color:'#c8cdd8'}}>{fmtCompact(d.tvHH)}</div><div style={{fontSize:8,color:'#4a5568'}}>{d.pct}% US</div></div>
+                  </div>);
+                })}
+              </div>
+            </div>
+          )}
+
+          {activeTab==="platforms" && (
+            <div style={{display:'flex',flexDirection:'column',gap:12}}>
+              <div style={{fontSize:10,color:'#5a6478',marginBottom:4}}>U.S. daily active user reach by platform. Estimated overlap-adjusted reach shown for selected region.</div>
+              {PLATFORM_DATA.filter(p=>selectedPlatforms.has(p.name)).map(p=>{
+                const regionPop=summary?summary.totalPop:341784857;
+                const estReach=Math.round(regionPop*p.pctPop/100);
+                return(<div key={p.name} style={{background:'#0e1218',borderRadius:10,padding:14,border:'1px solid #1a2035'}}>
+                  <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}>
+                    <div style={{width:10,height:10,borderRadius:'50%',background:p.color,flexShrink:0}}/>
+                    <span style={{fontSize:13,fontWeight:600,color:'#e8ecf4'}}>{p.name}</span>
+                    <span style={{marginLeft:'auto',fontSize:10,color:'#4a5568'}}>DAU: {p.dauUS}</span>
+                  </div>
+                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8,fontSize:10}}>
+                    <div><div style={{color:'#4a5568',fontSize:9}}>U.S. DAU</div><div style={{color:'#c8cdd8',fontFamily:'"JetBrains Mono",monospace'}}>{p.dauUS}</div></div>
+                    <div><div style={{color:'#4a5568',fontSize:9}}>U.S. MAU</div><div style={{color:'#c8cdd8',fontFamily:'"JetBrains Mono",monospace'}}>{p.mauUS}</div></div>
+                    <div><div style={{color:'#4a5568',fontSize:9}}>Est. Region DAU</div><div style={{color:'#4fd1a5',fontFamily:'"JetBrains Mono",monospace',fontWeight:600}}>{fmtCompact(estReach)}</div></div>
+                  </div>
+                  <div style={{marginTop:8,height:6,background:'#141c28',borderRadius:3,overflow:'hidden'}}><div style={{width:p.pctPop+'%',height:'100%',background:p.color,borderRadius:3,opacity:0.7}}/></div>
+                  <div style={{fontSize:8,color:'#3e4a60',marginTop:4}}>{p.pctPop}% daily penetration of U.S. population</div>
+                </div>);
+              })}
+            </div>
+          )}
+
+          {activeTab==="summary" && (
+            <div style={{display:'flex',flexDirection:'column',gap:16}}>
+              {summary ? (<>
+                <div style={{fontSize:12,fontWeight:600,color:'#e8ecf4',marginBottom:4}}>Media Plan Brief</div>
+                <div style={{background:'#0e1218',borderRadius:10,padding:16,border:'1px solid #1a2035',fontSize:11,lineHeight:1.7}}>
+                  <div style={{fontWeight:600,color:'#4fd1a5',marginBottom:8}}>Geographic Targeting</div>
+                  <div style={{color:'#7a8299'}}>States: <span style={{color:'#c8cdd8'}}>{summary.states.map(s=>s.abbr).join(', ')}</span></div>
+                  <div style={{color:'#7a8299'}}>Total Est. Population: <span style={{color:'#c8cdd8',fontFamily:'"JetBrains Mono",monospace'}}>{fmt(summary.totalPop)}</span></div>
+                  <div style={{color:'#7a8299'}}>Share of U.S.: <span style={{color:'#c8cdd8'}}>{fmtPct(summary.usPct)}</span></div>
+                  <div style={{color:'#7a8299'}}>5-Year Growth: <span style={{color:summary.growthPct>0?'#4fd1a5':'#e06070'}}>{(summary.growthPct>0?'+':'')+summary.growthPct.toFixed(2)}%</span></div>
+                  <div style={{color:'#7a8299'}}>Weighted Median Age: <span style={{color:'#c8cdd8'}}>{summary.avgAge.toFixed(1)}</span></div>
+                  <div style={{color:'#7a8299'}}>Weighted Urbanization: <span style={{color:'#c8cdd8'}}>{summary.avgUrban.toFixed(0)}%</span></div>
+                </div>
+                <div style={{background:'#0e1218',borderRadius:10,padding:16,border:'1px solid #1a2035',fontSize:11,lineHeight:1.7}}>
+                  <div style={{fontWeight:600,color:'#f0c040',marginBottom:8}}>DMA Markets</div>
+                  {selectedDMAs.size>0 ? (<>
+                    <div style={{color:'#7a8299'}}>Markets: <span style={{color:'#c8cdd8'}}>{DMA_DATA.filter(d=>selectedDMAs.has(d.rank)).map(d=>d.market).join(', ')}</span></div>
+                    <div style={{color:'#7a8299'}}>TV Households: <span style={{color:'#c8cdd8',fontFamily:'"JetBrains Mono",monospace'}}>{fmt(DMA_DATA.filter(d=>selectedDMAs.has(d.rank)).reduce((a,d)=>a+d.tvHH,0))}</span></div>
+                  </>) : <div style={{color:'#4a5568'}}>No DMA markets selected</div>}
+                </div>
+                <div style={{background:'#0e1218',borderRadius:10,padding:16,border:'1px solid #1a2035',fontSize:11,lineHeight:1.7}}>
+                  <div style={{fontWeight:600,color:'#b8a9e8',marginBottom:8}}>Platform Reach Estimates</div>
+                  {PLATFORM_DATA.filter(p=>selectedPlatforms.has(p.name)).map(p=>{
+                    const reach=Math.round(summary.totalPop*p.pctPop/100);
+                    return(<div key={p.name} style={{display:'flex',justifyContent:'space-between',color:'#7a8299'}}>
+                      <span>{p.name}</span><span style={{color:'#c8cdd8',fontFamily:'"JetBrains Mono",monospace',fontSize:10}}>~{fmtCompact(reach)} DAU est.</span>
+                    </div>);
+                  })}
+                </div>
+                <div style={{background:'#0e1218',borderRadius:10,padding:16,border:'1px solid #1a2035',fontSize:11,lineHeight:1.7}}>
+                  <div style={{fontWeight:600,color:'#7eb8da',marginBottom:8}}>Demographic Composition</div>
+                  <div style={{color:'#7a8299'}}>White: <span style={{color:'#c8cdd8'}}>{summary.avgWhite.toFixed(1)}%</span></div>
+                  <div style={{color:'#7a8299'}}>Black: <span style={{color:'#c8cdd8'}}>{summary.avgBlack.toFixed(1)}%</span></div>
+                  <div style={{color:'#7a8299'}}>Hispanic: <span style={{color:'#c8cdd8'}}>{summary.avgHisp.toFixed(1)}%</span></div>
+                  <div style={{color:'#7a8299'}}>Annual Births: <span style={{color:'#c8cdd8'}}>{fmt(summary.totalBirths)}</span></div>
+                  <div style={{color:'#7a8299'}}>Annual Deaths: <span style={{color:'#c8cdd8'}}>{fmt(summary.totalDeaths)}</span></div>
+                  <div style={{color:'#7a8299'}}>Intl. Migration: <span style={{color:'#c8cdd8'}}>{fmt(summary.totalIntlMig)}</span></div>
+                  <div style={{color:'#7a8299'}}>Dom. Migration: <span style={{color:summary.totalDomMig>0?'#4fd1a5':'#e06070'}}>{fmt(summary.totalDomMig)}</span></div>
+                </div>
+                <div style={{background:'#0e1218',borderRadius:10,padding:16,border:'1px solid #1a2035',fontSize:10,color:'#3e4a60',lineHeight:1.5}}>
+                  <div style={{fontWeight:600,color:'#4a5568',marginBottom:4}}>Data Sources</div>
+                  U.S. Census Bureau Vintage 2025 Population Estimates · CDC PLACES 2025 Release · Nielsen DMA Rankings 2026 · Platform-reported U.S. DAU/MAU data (Q4 2025) · SBA Office of Advocacy 2025 · BLS OES 2024
+                </div>
+              </>) : <EmptyState message="Build your targeting plan by selecting states and DMA markets, then review the consolidated brief here"/>}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.render(<App/>, document.getElementById('root'));
+</script>
+</body>
+</html>
