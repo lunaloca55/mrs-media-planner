@@ -164,6 +164,8 @@ input[type=checkbox] { accent-color:var(--blue); width:14px; height:14px; cursor
 .empty-icon { width:56px; height:56px; border-radius:16px; background:var(--bg-3); border:1px solid var(--border-0); display:flex; align-items:center; justify-content:center; margin-bottom:14px; font-size:22px; }
 .empty-text { font-size:13px; color:var(--text-3); max-width:240px; line-height:1.7; }
 .dma-hero { background:linear-gradient(135deg,rgba(240,185,64,0.07),rgba(240,185,64,0.02)); border:1px solid rgba(240,185,64,0.2); border-radius:12px; padding:16px; }
+/* budget tab */
+input[type=text]#budget-input::selection { background:rgba(91,156,246,0.3); }
 </style>
 </head>
 <body>
@@ -294,6 +296,18 @@ const PLATFORM_DATA=[
 {name:"Pinterest",dauUS:"~31M",mauUS:"98M",pctPop:9,color:"#BD081C"},
 ];
 
+// Channel CPM benchmarks and properties
+const CHANNELS=[
+  {id:'social_video',name:'Social Video',desc:'YouTube, TikTok, Reels, Shorts',cpmLow:8,cpmHigh:18,cpmMid:12,awarenessWeight:0.70,conversionWeight:0.10,color:'#FF4444',icon:'▶'},
+  {id:'social_display',name:'Social Display',desc:'Facebook, Instagram feed & stories',cpmLow:4,cpmHigh:12,cpmMid:7,awarenessWeight:0.50,conversionWeight:0.25,color:'#1877F2',icon:'⊞'},
+  {id:'programmatic',name:'Programmatic Display',desc:'Banner, native, rich media (DSP)',cpmLow:2,cpmHigh:9,cpmMid:5,awarenessWeight:0.30,conversionWeight:0.35,color:'#36d49a',icon:'◧'},
+  {id:'ctv',name:'CTV / Streaming',desc:'Hulu, Roku, Fire TV, Peacock',cpmLow:20,cpmHigh:45,cpmMid:30,awarenessWeight:0.85,conversionWeight:0.05,color:'#a78bfa',icon:'📺'},
+  {id:'search',name:'Paid Search',desc:'Google Ads, Bing Ads (CPC→CPM equiv.)',cpmLow:15,cpmHigh:50,cpmMid:28,awarenessWeight:0.05,conversionWeight:0.90,color:'#f0b940',icon:'🔍'},
+  {id:'audio',name:'Digital Audio',desc:'Spotify, Pandora, podcasts',cpmLow:6,cpmHigh:20,cpmMid:12,awarenessWeight:0.60,conversionWeight:0.08,color:'#1DB954',icon:'♫'},
+  {id:'ooh',name:'Digital OOH',desc:'Billboards, transit, place-based',cpmLow:3,cpmHigh:10,cpmMid:6,awarenessWeight:0.65,conversionWeight:0.02,color:'#f07068',icon:'🏙'},
+  {id:'email',name:'Email / CRM',desc:'Retargeting, newsletters, drip',cpmLow:1,cpmHigh:4,cpmMid:2,awarenessWeight:0.10,conversionWeight:0.80,color:'#34d4e8',icon:'✉'},
+];
+
 const CENSUS_REGIONS={
   Northeast:["CT","ME","MA","NH","RI","VT","NJ","NY","PA"],
   Midwest:["IL","IN","IA","KS","MI","MN","MO","NE","ND","OH","SD","WI"],
@@ -338,6 +352,14 @@ const state = {
   radialCenter: null, radialRadius: 0,
   topoData: null, projection: null, pathGen: null,
   mapReady: false,
+  // Budget allocator
+  budget: 100000,
+  goalSlider: 50, // 0=full awareness, 100=full conversion
+  channelOverrides: {}, // channelId -> manual pct override (null = auto)
+  budgetCpmMode: 'mid', // 'low','mid','high'
+  // Scenarios
+  savedScenarios: [], // [{name, snapshot}]
+  compareMode: false,
 };
 
 let listeners = [];
@@ -601,6 +623,7 @@ function renderPanel(){
   if(tab==='geo') panel.innerHTML=renderGeoTab(summary);
   else if(tab==='dma') panel.innerHTML=renderDMATab(summary);
   else if(tab==='platforms') panel.innerHTML=renderPlatformsTab(summary);
+  else if(tab==='budget') panel.innerHTML=renderBudgetTab();
   else if(tab==='summary') panel.innerHTML=renderBriefTab(summary);
 
   // Attach DMA click handlers
@@ -611,6 +634,70 @@ function renderPanel(){
         const sel=new Set(state.selectedDMAs);
         if(sel.has(rank))sel.delete(rank);else sel.add(rank);
         update({selectedDMAs:sel});
+      });
+    });
+  }
+
+  // Budget tab events
+  if(tab==='budget'){
+    // Budget input
+    const budgetInput=document.getElementById('budget-input');
+    if(budgetInput){
+      budgetInput.addEventListener('focus',function(){this.value=String(state.budget);this.select();});
+      budgetInput.addEventListener('blur',function(){
+        const v=parseInt(this.value.replace(/[^0-9]/g,''));
+        if(!isNaN(v)&&v>0){state.budget=v;}
+        this.value=fmt(state.budget);
+        renderPanel();
+      });
+      budgetInput.addEventListener('keydown',function(e){
+        if(e.key==='Enter'){this.blur();}
+      });
+    }
+    // Budget presets
+    const presets=document.getElementById('budget-presets');
+    if(presets)presets.addEventListener('click',e=>{
+      const btn=e.target.closest('[data-budget]');
+      if(!btn)return;
+      state.budget=parseInt(btn.dataset.budget);
+      renderPanel();
+    });
+    // Goal slider
+    const goalSlider=document.getElementById('goal-slider');
+    if(goalSlider){
+      goalSlider.addEventListener('input',()=>{state.goalSlider=Number(goalSlider.value);renderPanel();});
+    }
+    // CPM mode
+    const cpmBtns=document.getElementById('cpm-mode-btns');
+    if(cpmBtns)cpmBtns.addEventListener('click',e=>{
+      const btn=e.target.closest('[data-cpm]');
+      if(!btn)return;
+      state.budgetCpmMode=btn.dataset.cpm;
+      renderPanel();
+    });
+  }
+
+  // Brief tab events
+  if(tab==='summary'){
+    const copyBtn=document.getElementById('copy-brief-btn');
+    if(copyBtn)copyBtn.addEventListener('click',copyBriefToClipboard);
+    const csvBtn=document.getElementById('export-csv-btn');
+    if(csvBtn)csvBtn.addEventListener('click',downloadCSV);
+    const saveBtn=document.getElementById('save-scenario-btn');
+    if(saveBtn)saveBtn.addEventListener('click',()=>{
+      const name=prompt('Name this scenario:','Scenario '+(state.savedScenarios.length+1));
+      if(name){saveScenario(name);renderPanel();}
+    });
+    panel.querySelectorAll('[data-load-scenario]').forEach(el=>{
+      el.addEventListener('click',()=>{
+        const idx=parseInt(el.dataset.loadScenario);
+        if(state.savedScenarios[idx])restoreSnapshot(state.savedScenarios[idx].snapshot);
+      });
+    });
+    panel.querySelectorAll('[data-del-scenario]').forEach(el=>{
+      el.addEventListener('click',()=>{
+        const idx=parseInt(el.dataset.delScenario);
+        deleteScenario(idx);renderPanel();
       });
     });
   }
@@ -701,8 +788,68 @@ function renderPlatformsTab(summary){
 function renderBriefTab(summary){
   if(!summary)return `<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">Build your targeting plan by selecting states and DMA markets, then review the brief here</div></div>`;
   const selDMAs=DMA_DATA.filter(d=>state.selectedDMAs.has(d.rank));
+
+  // Scenario compare section
+  let scenarioHtml='';
+  if(state.savedScenarios.length>0){
+    scenarioHtml+=`<div class="card" style="padding:14px">
+      <div class="card-title">Saved Scenarios</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        ${state.savedScenarios.map((sc,i)=>{
+          const ss=getScenarioSummary(sc.snapshot);
+          return `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:var(--bg-2);border:1px solid var(--border-0)">
+            <div style="flex:1;min-width:0">
+              <div style="font-size:12px;font-weight:700;color:var(--text-0);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(sc.name)}</div>
+              <div style="font-size:10px;color:var(--text-3);font-weight:500;margin-top:2px">${ss.stateCount} states · ${fmt(ss.totalPop)} pop · ${fmtMoney(ss.budget)}</div>
+            </div>
+            <button class="btn-pill" style="padding:4px 8px;font-size:9px" data-load-scenario="${i}">Load</button>
+            <button style="color:var(--red);font-size:14px;padding:2px 4px;opacity:0.6" data-del-scenario="${i}">×</button>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+
+    // Compare table if 2+ scenarios
+    if(state.savedScenarios.length>=2){
+      const current={name:'Current',snapshot:captureSnapshot()};
+      const all=[current,...state.savedScenarios];
+      scenarioHtml+=`<div class="card" style="padding:14px;overflow-x:auto">
+        <div class="card-title">Scenario Comparison</div>
+        <table class="detail-table" style="font-size:10px">
+          <thead><tr><th style="min-width:70px">Metric</th>${all.map(s=>`<th style="min-width:70px;color:var(--blue)">${esc(s.name)}</th>`).join('')}</tr></thead>
+          <tbody>
+            ${[
+              ['States',s=>getScenarioSummary(s.snapshot).stateCount],
+              ['Population',s=>fmtCompact(getScenarioSummary(s.snapshot).totalPop)],
+              ['U.S. %',s=>getScenarioSummary(s.snapshot).usPct.toFixed(1)+'%'],
+              ['Growth',s=>{const g=getScenarioSummary(s.snapshot).growthPct;return g!=null?(g>0?'+':'')+g.toFixed(1)+'%':'—';}],
+              ['Med. Age',s=>{const a=getScenarioSummary(s.snapshot).avgAge;return a?a.toFixed(1):'—';}],
+              ['DMAs',s=>getScenarioSummary(s.snapshot).dmaCount],
+              ['Budget',s=>fmtMoney(s.snapshot.budget)],
+              ['Objective',s=>{const g=s.snapshot.goalSlider;return g<=25?'Awareness':g<=50?'Bal. (Awr)':g<=75?'Bal. (Conv)':'Response';}],
+            ].map(([label,fn])=>`<tr><td style="font-weight:600;color:var(--text-2)">${label}</td>${all.map(s=>`<td style="font-family:var(--mono);font-weight:500">${fn(s)}</td>`).join('')}</tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+    }
+  }
+
   return `
-    <div style="font-size:14px;font-weight:700;margin-bottom:4px">Media Plan Brief</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div style="font-size:14px;font-weight:700">Media Plan Brief</div>
+      <div style="display:flex;gap:4px">
+        <button class="btn-pill" id="save-scenario-btn" style="padding:4px 10px;font-size:10px;border-color:var(--purple);color:var(--purple)">💾 Save Scenario</button>
+      </div>
+    </div>
+
+    <!-- Export bar -->
+    <div style="display:flex;gap:6px;margin-bottom:8px">
+      <button class="btn-pill" id="copy-brief-btn" style="flex:1;padding:8px;font-size:11px;font-weight:700;border-color:var(--blue);color:var(--blue)">📋 Copy to Clipboard</button>
+      <button class="btn-pill" id="export-csv-btn" style="flex:1;padding:8px;font-size:11px;font-weight:700;border-color:var(--green);color:var(--green)">📊 Export CSV</button>
+    </div>
+
+    ${scenarioHtml}
+
     <div class="card brief-section">
       <div class="brief-heading" style="color:var(--blue)">Geographic Targeting</div>
       <div class="brief-row">States: <strong>${summary.states.map(s=>s.abbr).join(', ')}</strong></div>
@@ -721,6 +868,17 @@ function renderBriefTab(summary){
       ${PLATFORM_DATA.filter(p=>state.selectedPlatforms.has(p.name)).map(p=>{const reach=Math.round(summary.totalPop*p.pctPop/100);return `<div style="display:flex;justify-content:space-between;color:var(--text-1)"><span style="font-weight:500">${esc(p.name)}</span><span style="font-family:var(--mono);font-weight:600;font-size:11px;color:var(--text-0)">~${fmtCompact(reach)} DAU</span></div>`;}).join('')}
     </div>
     <div class="card brief-section">
+      <div class="brief-heading" style="color:var(--green)">Budget Allocation</div>
+      ${(()=>{const a=calcBudgetAllocation();return `
+        <div class="brief-row">Budget: <strong class="brief-mono">${fmtMoney(a.budget)}</strong></div>
+        <div class="brief-row">Objective: <strong>${state.goalSlider<=25?'Brand Awareness':state.goalSlider<=50?'Balanced (Awareness)':state.goalSlider<=75?'Balanced (Conversion)':'Direct Response'}</strong></div>
+        <div class="brief-row">Est. Impressions: <strong class="brief-mono">${fmtCompact(a.totalImpressions)}</strong></div>
+        <div class="brief-row">Blended CPM: <strong class="brief-mono">$${a.blendedCPM.toFixed(2)}</strong></div>
+        <div style="margin-top:6px;display:flex;flex-direction:column;gap:2px">
+          ${a.allocations.filter(al=>al.pct>0.5).map(al=>`<div style="display:flex;justify-content:space-between;color:var(--text-1);font-size:11px"><span style="font-weight:500">${al.channel.icon} ${esc(al.channel.name)}</span><span style="font-family:var(--mono);font-weight:600;color:var(--text-0)">${al.pct.toFixed(1)}% · ${fmtMoney(al.spend)}</span></div>`).join('')}
+        </div>`;})()}
+    </div>
+    <div class="card brief-section">
       <div class="brief-heading" style="color:var(--cyan)">Demographics</div>
       <div class="brief-row">White: <strong>${summary.avgWhite.toFixed(1)}%</strong></div>
       <div class="brief-row">Black: <strong>${summary.avgBlack.toFixed(1)}%</strong></div>
@@ -734,8 +892,333 @@ function renderBriefTab(summary){
 }
 
 // ════════════════════════════════════════════════════════════
-// SIDEBAR
+// BUDGET ALLOCATOR ENGINE
 // ════════════════════════════════════════════════════════════
+function calcBudgetAllocation(){
+  const goal=state.goalSlider/100; // 0=awareness, 1=conversion
+  const budget=state.budget;
+  const summary=getSummary();
+  const regionPop=summary?summary.totalPop:US_POP;
+  const regionScale=regionPop/US_POP;
+
+  // Calculate raw weight per channel based on goal slider
+  // awareness weight when slider=0, conversion weight when slider=1, blend in between
+  let rawWeights=CHANNELS.map(ch=>{
+    const w=ch.awarenessWeight*(1-goal)+ch.conversionWeight*goal;
+    return {channel:ch, weight:Math.max(0.01,w)};
+  });
+  // Normalize weights to sum to 1
+  const totalW=rawWeights.reduce((a,r)=>a+r.weight,0);
+  rawWeights=rawWeights.map(r=>({...r,weight:r.weight/totalW}));
+
+  // Apply manual overrides if any
+  const overrides=state.channelOverrides;
+  let lockedPct=0;
+  let lockedIds=new Set();
+  for(const id in overrides){
+    if(overrides[id]!=null){lockedPct+=overrides[id];lockedIds.add(id);}
+  }
+  const remainPct=Math.max(0,100-lockedPct);
+  const unlockedW=rawWeights.filter(r=>!lockedIds.has(r.channel.id));
+  const unlockedTotalW=unlockedW.reduce((a,r)=>a+r.weight,0);
+
+  const allocations=rawWeights.map(r=>{
+    let pct;
+    if(lockedIds.has(r.channel.id)){
+      pct=overrides[r.channel.id];
+    } else {
+      pct=unlockedTotalW>0?(r.weight/unlockedTotalW)*remainPct:0;
+    }
+    const spend=budget*(pct/100);
+    const cpmKey=state.budgetCpmMode;
+    const cpm=cpmKey==='low'?r.channel.cpmLow:cpmKey==='high'?r.channel.cpmHigh:r.channel.cpmMid;
+    const impressions=cpm>0?Math.round((spend/cpm)*1000):0;
+    // Scale impressions to region (rough proxy)
+    const regionImpressions=Math.round(impressions*regionScale);
+    // Estimated reach (assuming ~3.5 avg frequency for awareness, ~8 for conversion)
+    const avgFreq=3.5*(1-goal)+8*goal;
+    const estReach=avgFreq>0?Math.round(regionImpressions/avgFreq):0;
+    return {
+      channel:r.channel,
+      pct:pct,
+      spend:spend,
+      cpm:cpm,
+      impressions:impressions,
+      regionImpressions:regionImpressions,
+      estReach:estReach,
+      isLocked:lockedIds.has(r.channel.id),
+    };
+  });
+
+  const totalImpressions=allocations.reduce((a,r)=>a+r.regionImpressions,0);
+  const totalReach=allocations.reduce((a,r)=>a+r.estReach,0);
+  const blendedCPM=totalImpressions>0?(budget/(totalImpressions/1000)):0;
+
+  return {allocations,totalImpressions,totalReach,blendedCPM,regionPop,regionScale,budget};
+}
+
+function fmtMoney(n){
+  if(n>=1e6)return'$'+(n/1e6).toFixed(1)+'M';
+  if(n>=1e3)return'$'+(n/1e3).toFixed(1)+'K';
+  return'$'+Math.round(n);
+}
+
+function renderBudgetTab(){
+  const summary=getSummary();
+  const alloc=calcBudgetAllocation();
+  const goalLabel=state.goalSlider<=25?'Brand Awareness':state.goalSlider<=50?'Balanced (Awareness-Lean)':state.goalSlider<=75?'Balanced (Conversion-Lean)':'Direct Response';
+  const goalColor=state.goalSlider<=40?'var(--purple)':state.goalSlider<=60?'var(--blue)':'var(--green)';
+
+  let html=`
+  <div style="font-size:14px;font-weight:700;margin-bottom:2px">Budget Allocator</div>
+  <div style="font-size:11px;color:var(--text-3);margin-bottom:10px">Enter your budget and set campaign goals. Channel mix adjusts automatically.</div>
+
+  <!-- Budget input -->
+  <div class="card" style="padding:16px">
+    <div class="card-title">Campaign Budget</div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <span style="font-size:22px;font-weight:800;color:var(--text-0);font-family:var(--mono)">$</span>
+      <input type="text" id="budget-input" value="${fmt(state.budget)}" style="flex:1;background:var(--bg-3);border:1px solid var(--border-0);border-radius:var(--radius-sm);padding:10px 12px;font-family:var(--mono);font-size:18px;font-weight:700;color:var(--text-0);outline:none;transition:border-color .15s;" onfocus="this.style.borderColor='var(--blue)'" onblur="this.style.borderColor='var(--border-0)'">
+    </div>
+    <div style="display:flex;gap:4px;flex-wrap:wrap" id="budget-presets">
+      ${[10000,25000,50000,100000,250000,500000,1000000].map(v=>`<button class="btn-pill${state.budget===v?' active':''}" data-budget="${v}" style="font-family:var(--mono);font-size:10px;padding:5px 8px">${fmtMoney(v)}</button>`).join('')}
+    </div>
+  </div>
+
+  <!-- Goal slider -->
+  <div class="card" style="padding:16px">
+    <div class="card-title">Campaign Objective</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <span style="font-size:11px;color:var(--purple);font-weight:600">🎯 Awareness</span>
+      <span style="font-size:11px;font-weight:700;color:${goalColor};font-family:var(--mono)">${goalLabel}</span>
+      <span style="font-size:11px;color:var(--green);font-weight:600">💰 Conversion</span>
+    </div>
+    <input type="range" id="goal-slider" min="0" max="100" step="5" value="${state.goalSlider}" style="margin-bottom:8px">
+    <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text-3)">
+      <span>Brand lift, reach, video views</span>
+      <span>Leads, sales, sign-ups</span>
+    </div>
+  </div>
+
+  <!-- CPM mode toggle -->
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">
+    <span style="font-size:10px;font-weight:700;color:var(--text-2);letter-spacing:0.6px;text-transform:uppercase">CPM Estimate</span>
+    <div style="display:flex;gap:2px;margin-left:auto" id="cpm-mode-btns">
+      ${[['low','Conservative'],['mid','Moderate'],['high','Premium']].map(([v,l])=>`<button class="btn-pill${state.budgetCpmMode===v?' active':''}" data-cpm="${v}" style="font-size:9px;padding:4px 8px">${l}</button>`).join('')}
+    </div>
+  </div>
+
+  <!-- Summary metrics -->
+  <div class="hero-card" style="background:linear-gradient(135deg,rgba(54,212,154,0.07),rgba(91,156,246,0.04));border-color:rgba(54,212,154,0.18)">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+      <div>
+        <div style="font-size:8px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--text-3);margin-bottom:3px">Est. Impressions</div>
+        <div style="font-size:20px;font-weight:800;font-family:var(--mono);color:var(--green)">${fmtCompact(alloc.totalImpressions)}</div>
+      </div>
+      <div>
+        <div style="font-size:8px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--text-3);margin-bottom:3px">Est. Reach</div>
+        <div style="font-size:20px;font-weight:800;font-family:var(--mono);color:var(--blue)">${fmtCompact(alloc.totalReach)}</div>
+      </div>
+      <div>
+        <div style="font-size:8px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--text-3);margin-bottom:3px">Blended CPM</div>
+        <div style="font-size:20px;font-weight:800;font-family:var(--mono);color:var(--cyan)">$${alloc.blendedCPM.toFixed(2)}</div>
+      </div>
+    </div>
+    ${summary?`<div style="font-size:10px;color:var(--text-3);margin-top:8px;font-weight:500">Scaled to ${fmt(alloc.regionPop)} population · ${(alloc.regionScale*100).toFixed(1)}% of U.S.</div>`:`<div style="font-size:10px;color:var(--yellow);margin-top:8px;font-weight:500">⚠ No geography selected — showing national estimates</div>`}
+  </div>
+
+  <!-- Channel allocation breakdown -->
+  <div class="card" style="padding:16px">
+    <div class="card-title">Channel Allocation</div>
+
+    <!-- Stacked bar -->
+    <div style="display:flex;height:10px;border-radius:5px;overflow:hidden;margin-bottom:14px">
+      ${alloc.allocations.filter(a=>a.pct>0.5).map(a=>`<div style="width:${a.pct}%;background:${a.channel.color};transition:width .2s" title="${a.channel.name}: ${a.pct.toFixed(1)}%"></div>`).join('')}
+    </div>
+
+    <!-- Channel rows -->
+    <div style="display:flex;flex-direction:column;gap:8px" id="channel-rows">
+      ${alloc.allocations.map(a=>{
+        const pctBarW=Math.max(2,a.pct);
+        return `<div style="padding:10px;border-radius:8px;border:1px solid ${a.isLocked?'rgba(91,156,246,0.3)':'var(--border-0)'};background:${a.isLocked?'rgba(91,156,246,0.04)':'var(--bg-2)'};transition:all .12s">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <span style="font-size:14px">${a.channel.icon}</span>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:12px;font-weight:700;color:var(--text-0)">${esc(a.channel.name)}</div>
+              <div style="font-size:9px;color:var(--text-3)">${esc(a.channel.desc)}</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:14px;font-weight:800;font-family:var(--mono);color:${a.channel.color}">${a.pct.toFixed(1)}%</div>
+              <div style="font-size:10px;color:var(--text-2);font-family:var(--mono);font-weight:500">${fmtMoney(a.spend)}</div>
+            </div>
+          </div>
+          <div style="display:flex;height:4px;border-radius:2px;overflow:hidden;background:var(--bg-3);margin-bottom:8px">
+            <div style="width:${pctBarW}%;background:${a.channel.color};border-radius:2px;transition:width .2s"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;font-size:10px">
+            <div><span style="color:var(--text-3)">CPM</span> <span style="font-family:var(--mono);font-weight:600;color:var(--text-1)">$${a.cpm}</span></div>
+            <div><span style="color:var(--text-3)">Impr.</span> <span style="font-family:var(--mono);font-weight:600;color:var(--text-1)">${fmtCompact(a.regionImpressions)}</span></div>
+            <div><span style="color:var(--text-3)">Reach</span> <span style="font-family:var(--mono);font-weight:600;color:var(--text-1)">${fmtCompact(a.estReach)}</span></div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>
+
+  <div class="card sources-card" style="font-size:9px">
+    <strong>Note:</strong> CPM benchmarks are industry median estimates (Q4 2025). Actual CPMs vary by targeting, creative format, bidding strategy, and inventory source. Impression and reach figures are directional estimates for planning purposes only.
+  </div>`;
+
+  return html;
+}
+
+// ════════════════════════════════════════════════════════════
+// SCENARIO MANAGEMENT
+// ════════════════════════════════════════════════════════════
+function captureSnapshot(){
+  return {
+    selectedStates:Array.from(state.selectedStates),
+    selectedDMAs:Array.from(state.selectedDMAs),
+    budget:state.budget,
+    goalSlider:state.goalSlider,
+    budgetCpmMode:state.budgetCpmMode,
+    selectedPlatforms:Array.from(state.selectedPlatforms),
+    channelOverrides:{...state.channelOverrides},
+  };
+}
+function restoreSnapshot(snap){
+  update({
+    selectedStates:new Set(snap.selectedStates),
+    selectedDMAs:new Set(snap.selectedDMAs),
+    budget:snap.budget,
+    goalSlider:snap.goalSlider,
+    budgetCpmMode:snap.budgetCpmMode,
+    selectedPlatforms:new Set(snap.selectedPlatforms),
+    channelOverrides:snap.channelOverrides||{},
+    selectedRegion:null,
+  });
+  buildLayout();
+}
+function saveScenario(name){
+  if(!name)return;
+  const scenarios=[...state.savedScenarios];
+  scenarios.push({name:name,snapshot:captureSnapshot(),savedAt:Date.now()});
+  state.savedScenarios=scenarios;
+}
+function deleteScenario(idx){
+  const scenarios=[...state.savedScenarios];
+  scenarios.splice(idx,1);
+  state.savedScenarios=scenarios;
+}
+function getScenarioSummary(snap){
+  const sel=STATE_DATA.filter(s=>snap.selectedStates.includes(s.abbr));
+  if(!sel.length)return {stateCount:0,totalPop:0,usPct:0,dmaCount:snap.selectedDMAs.length,budget:snap.budget,goalSlider:snap.goalSlider};
+  const tp=sel.reduce((a,s)=>a+s.pop2025,0);
+  return {stateCount:sel.length,totalPop:tp,usPct:(tp/US_POP)*100,dmaCount:snap.selectedDMAs.length,budget:snap.budget,goalSlider:snap.goalSlider,
+    growthPct:((tp-sel.reduce((a,s)=>a+s.pop2020,0))/sel.reduce((a,s)=>a+s.pop2020,0))*100,
+    avgAge:sel.reduce((a,s)=>a+s.medAge*s.pop2025,0)/tp,
+  };
+}
+
+// ════════════════════════════════════════════════════════════
+// EXPORT FUNCTIONS
+// ════════════════════════════════════════════════════════════
+function generateCSV(){
+  const summary=getSummary();
+  if(!summary)return '';
+  const alloc=calcBudgetAllocation();
+  const selDMAs=DMA_DATA.filter(d=>state.selectedDMAs.has(d.rank));
+  let csv='MediaScope Planner — Media Plan Export\n';
+  csv+='Generated,'+ new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})+'\n\n';
+  csv+='GEOGRAPHIC TARGETING\n';
+  csv+='Metric,Value\n';
+  csv+='States,"'+summary.states.map(s=>s.abbr).join(', ')+'"\n';
+  csv+='Population,'+summary.totalPop+'\n';
+  csv+='U.S. Share,'+summary.usPct.toFixed(2)+'%\n';
+  csv+='5-Yr Growth,'+(summary.growthPct>0?'+':'')+summary.growthPct.toFixed(2)+'%\n';
+  csv+='Wtd. Median Age,'+summary.avgAge.toFixed(1)+'\n';
+  csv+='Urbanization,'+summary.avgUrban.toFixed(0)+'%\n';
+  csv+='White %,'+summary.avgWhite.toFixed(1)+'%\n';
+  csv+='Black %,'+summary.avgBlack.toFixed(1)+'%\n';
+  csv+='Hispanic %,'+summary.avgHisp.toFixed(1)+'%\n\n';
+  if(selDMAs.length){
+    csv+='DMA MARKETS\n';
+    csv+='Rank,Market,TV Households,% of U.S.\n';
+    selDMAs.forEach(d=>{csv+=d.rank+',"'+d.market+'",'+d.tvHH+','+d.pct+'%\n';});
+    csv+='\n';
+  }
+  csv+='STATE DETAIL\n';
+  csv+='State,Population,Growth %,Median Age,Urban %,Top Employer\n';
+  [...summary.states].sort((a,b)=>b.pop2025-a.pop2025).forEach(s=>{
+    const g=((s.pop2025-s.pop2020)/s.pop2020)*100;
+    csv+=s.abbr+','+s.pop2025+','+(g>0?'+':'')+g.toFixed(1)+'%,'+s.medAge+','+s.urban+'%,"'+s.topEmployer+'"\n';
+  });
+  csv+='\nBUDGET ALLOCATION\n';
+  csv+='Budget,'+alloc.budget+'\n';
+  csv+='Objective,'+(state.goalSlider<=25?'Brand Awareness':state.goalSlider<=50?'Balanced (Awareness)':state.goalSlider<=75?'Balanced (Conversion)':'Direct Response')+'\n';
+  csv+='Est. Total Impressions,'+alloc.totalImpressions+'\n';
+  csv+='Blended CPM,$'+alloc.blendedCPM.toFixed(2)+'\n\n';
+  csv+='Channel,Allocation %,Spend,CPM,Est. Impressions,Est. Reach\n';
+  alloc.allocations.forEach(a=>{
+    csv+='"'+a.channel.name+'",'+a.pct.toFixed(1)+'%,$'+Math.round(a.spend)+',$'+a.cpm+','+a.regionImpressions+','+a.estReach+'\n';
+  });
+  csv+='\nPLATFORM REACH\n';
+  csv+='Platform,U.S. DAU,U.S. MAU,Region Est. DAU\n';
+  PLATFORM_DATA.filter(p=>state.selectedPlatforms.has(p.name)).forEach(p=>{
+    const reach=Math.round(summary.totalPop*p.pctPop/100);
+    csv+='"'+p.name+'",'+p.dauUS+','+p.mauUS+','+reach+'\n';
+  });
+  return csv;
+}
+
+function downloadCSV(){
+  const csv=generateCSV();
+  if(!csv)return;
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='mediascope-plan-'+new Date().toISOString().split('T')[0]+'.csv';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function copyBriefToClipboard(){
+  const summary=getSummary();
+  if(!summary)return;
+  const alloc=calcBudgetAllocation();
+  const selDMAs=DMA_DATA.filter(d=>state.selectedDMAs.has(d.rank));
+  let text='MEDIA PLAN BRIEF\n';
+  text+='Generated: '+new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})+'\n\n';
+  text+='— GEOGRAPHIC TARGETING —\n';
+  text+='States: '+summary.states.map(s=>s.abbr).join(', ')+'\n';
+  text+='Population: '+fmt(summary.totalPop)+' ('+fmtPct(summary.usPct)+' of U.S.)\n';
+  text+='5-Yr Growth: '+(summary.growthPct>0?'+':'')+summary.growthPct.toFixed(2)+'%\n';
+  text+='Wtd. Median Age: '+summary.avgAge.toFixed(1)+' | Urban: '+summary.avgUrban.toFixed(0)+'%\n';
+  text+='Ethnicity: White '+summary.avgWhite.toFixed(1)+'%, Black '+summary.avgBlack.toFixed(1)+'%, Hispanic '+summary.avgHisp.toFixed(1)+'%\n\n';
+  if(selDMAs.length){
+    text+='— DMA MARKETS —\n';
+    selDMAs.forEach(d=>{text+='#'+d.rank+' '+d.market+' ('+fmt(d.tvHH)+' TV HH, '+d.pct+'% US)\n';});
+    text+='\n';
+  }
+  text+='— BUDGET ALLOCATION —\n';
+  text+='Budget: '+fmtMoney(alloc.budget)+'\n';
+  text+='Objective: '+(state.goalSlider<=25?'Brand Awareness':state.goalSlider<=50?'Balanced (Awareness)':state.goalSlider<=75?'Balanced (Conversion)':'Direct Response')+'\n';
+  text+='Est. Impressions: '+fmtCompact(alloc.totalImpressions)+' | Blended CPM: $'+alloc.blendedCPM.toFixed(2)+'\n\n';
+  alloc.allocations.filter(a=>a.pct>0.5).forEach(a=>{
+    text+=a.channel.name+': '+a.pct.toFixed(1)+'% ('+fmtMoney(a.spend)+') — ~'+fmtCompact(a.regionImpressions)+' impr.\n';
+  });
+  text+='\n— PLATFORM REACH —\n';
+  PLATFORM_DATA.filter(p=>state.selectedPlatforms.has(p.name)).forEach(p=>{
+    const reach=Math.round(summary.totalPop*p.pctPop/100);
+    text+=p.name+': ~'+fmtCompact(reach)+' DAU\n';
+  });
+  text+='\nSources: Census Bureau Vintage 2025 · Nielsen DMA 2026 · Platform Q4 2025 DAU/MAU · BLS OES 2024\n';
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn=document.getElementById('copy-brief-btn');
+    if(btn){const orig=btn.textContent;btn.textContent='✓ Copied!';btn.style.color='var(--green)';setTimeout(()=>{btn.textContent=orig;btn.style.color='';},1800);}
+  });
+}
+
 function renderSidebar(){
   const sb=document.getElementById('sidebar-body');
   if(!sb)return;
@@ -838,7 +1321,7 @@ function buildLayout(){
   <!-- RIGHT PANEL -->
   <div class="panel">
     <div class="tabs" id="tabs">
-      ${[["geo","Geography"],["dma","DMA"],["platforms","Platforms"],["summary","Brief"]].map(([k,l])=>`<button data-tab="${k}" class="${state.activeTab===k?'active':''}">${l}</button>`).join('')}
+      ${[["geo","Geography"],["dma","DMA"],["platforms","Platforms"],["budget","Budget"],["summary","Brief"]].map(([k,l])=>`<button data-tab="${k}" class="${state.activeTab===k?'active':''}">${l}</button>`).join('')}
     </div>
     <div class="panel-body" id="panel-body"></div>
   </div>`;
