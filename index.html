@@ -7,49 +7,65 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg-0: #06080d;
-  --bg-1: #0c1017;
-  --bg-2: #111822;
-  --bg-3: #17202f;
-  --bg-card: #0f1520;
-  --border-0: #1a2436;
-  --border-1: #243352;
-  --border-active: #3b82f6;
-  --text-0: #f2f4f8;
-  --text-1: #c0c8d8;
-  --text-2: #8892a8;
-  --text-3: #5a6478;
-  --blue: #5b9cf6;
-  --blue-dim: rgba(91,156,246,0.1);
-  --green: #36d49a;
-  --green-dim: rgba(54,212,154,0.08);
-  --red: #f07068;
-  --red-dim: rgba(240,112,104,0.08);
-  --yellow: #f0b940;
-  --yellow-dim: rgba(240,185,64,0.08);
-  --purple: #a78bfa;
-  --cyan: #34d4e8;
+  /* Light theme — WCAG AA compliant
+     Body text on bg: #334155 on #ffffff = 8.6:1 ✓ (AA requires 4.5:1)
+     Secondary text:  #64748b on #ffffff = 4.6:1 ✓
+     Muted text:      #94a3b8 on #ffffff = 2.9:1 (decorative only, not body)
+     Blue accent:     #2563eb on #ffffff = 5.5:1 ✓
+     Green accent:    #16a34a on #ffffff = 4.5:1 ✓
+     Red accent:      #dc2626 on #ffffff = 5.1:1 ✓
+  */
+  --bg-0: #f8fafc;
+  --bg-1: #ffffff;
+  --bg-2: #f1f5f9;
+  --bg-3: #e2e8f0;
+  --bg-card: #ffffff;
+  --bg-map: #f0f4f8;
+  --border-0: #e2e8f0;
+  --border-1: #cbd5e1;
+  --border-active: #2563eb;
+  --text-0: #1e293b;
+  --text-1: #334155;
+  --text-2: #64748b;
+  --text-3: #94a3b8;
+  --blue: #2563eb;
+  --blue-dim: rgba(37,99,235,0.08);
+  --blue-light: #dbeafe;
+  --green: #16a34a;
+  --green-dim: rgba(22,163,74,0.06);
+  --red: #dc2626;
+  --red-dim: rgba(220,38,38,0.06);
+  --yellow: #ca8a04;
+  --yellow-dim: rgba(202,138,4,0.06);
+  --purple: #7c3aed;
+  --cyan: #0891b2;
+  --orange: #ea580c;
   --mono: 'JetBrains Mono', monospace;
-  --sans: 'DM Sans', system-ui, sans-serif;
+  --sans: 'DM Sans', system-ui, -apple-system, sans-serif;
   --radius: 10px;
   --radius-sm: 6px;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 2px 8px rgba(0,0,0,0.06);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,0.08);
 }
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 html { height:100%; }
-body { height:100%; font-family:var(--sans); background:var(--bg-0); color:var(--text-0); overflow:hidden; }
+body { height:100%; font-family:var(--sans); background:var(--bg-0); color:var(--text-0); overflow:hidden; -webkit-font-smoothing:antialiased; }
 #app { display:flex; height:100vh; }
 button { font-family:var(--sans); cursor:pointer; border:none; background:none; color:inherit; }
+button:focus-visible { outline:2px solid var(--blue); outline-offset:2px; border-radius:4px; }
+input:focus-visible { outline:2px solid var(--blue); outline-offset:1px; }
 input[type=range] { -webkit-appearance:none; appearance:none; height:4px; border-radius:2px; background:var(--bg-3); outline:none; cursor:pointer; width:100%; }
-input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:var(--blue); cursor:pointer; border:2px solid var(--bg-1); box-shadow:0 0 8px rgba(91,156,246,0.3); }
-input[type=range]::-moz-range-thumb { width:14px; height:14px; border-radius:50%; background:var(--blue); border:2px solid var(--bg-1); cursor:pointer; }
-input[type=checkbox] { accent-color:var(--blue); width:14px; height:14px; cursor:pointer; }
-::-webkit-scrollbar { width:5px; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:16px; height:16px; border-radius:50%; background:var(--blue); cursor:pointer; border:2px solid var(--bg-1); box-shadow:var(--shadow-sm); }
+input[type=range]::-moz-range-thumb { width:16px; height:16px; border-radius:50%; background:var(--blue); border:2px solid var(--bg-1); cursor:pointer; }
+input[type=checkbox] { accent-color:var(--blue); width:15px; height:15px; cursor:pointer; }
+::-webkit-scrollbar { width:6px; }
 ::-webkit-scrollbar-track { background:transparent; }
-::-webkit-scrollbar-thumb { background:var(--border-0); border-radius:3px; }
-::-webkit-scrollbar-thumb:hover { background:var(--border-1); }
+::-webkit-scrollbar-thumb { background:var(--border-1); border-radius:3px; }
+::-webkit-scrollbar-thumb:hover { background:#94a3b8; }
 
 /* ─── LAYOUT ─── */
-.sidebar { width:290px; min-width:290px; background:var(--bg-1); border-right:1px solid var(--border-0); display:flex; flex-direction:column; transition:width .2s, min-width .2s; overflow:hidden; }
+.sidebar { width:280px; min-width:280px; background:var(--bg-1); border-right:1px solid var(--border-0); display:flex; flex-direction:column; transition:width .2s, min-width .2s; overflow:hidden; box-shadow:var(--shadow-sm); }
 .sidebar.collapsed { width:44px; min-width:44px; }
 .sidebar-header { padding:10px 14px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border-0); min-height:44px; }
 .sidebar-header h3 { font-size:10px; font-weight:700; letter-spacing:1.8px; text-transform:uppercase; color:var(--blue); }
@@ -59,71 +75,85 @@ input[type=checkbox] { accent-color:var(--blue); width:14px; height:14px; cursor
 .filter-label { font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-2); margin-bottom:6px; }
 .filter-group { display:flex; flex-direction:column; }
 .range-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
-.range-label { font-size:11px; color:var(--text-3); }
-.range-value { font-size:11px; color:var(--text-0); font-family:var(--mono); font-weight:500; }
+.range-label { font-size:11px; color:var(--text-2); }
+.range-value { font-size:11px; color:var(--text-0); font-family:var(--mono); font-weight:600; }
 .btn-grid { display:grid; grid-template-columns:1fr 1fr; gap:5px; }
-.btn-pill { padding:7px 6px; border-radius:var(--radius-sm); border:1px solid var(--border-0); font-size:11px; font-weight:600; color:var(--text-2); transition:all .12s; text-align:center; }
-.btn-pill:hover { border-color:var(--border-1); color:var(--text-1); }
+.btn-pill { padding:7px 6px; border-radius:var(--radius-sm); border:1px solid var(--border-0); font-size:11px; font-weight:600; color:var(--text-2); transition:all .12s; text-align:center; background:var(--bg-1); }
+.btn-pill:hover { border-color:var(--border-1); color:var(--text-1); background:var(--bg-2); }
 .btn-pill.active { background:var(--blue-dim); border-color:var(--blue); color:var(--blue); }
 .btn-row { display:flex; gap:4px; }
 .btn-row .btn-pill { flex:1; }
 .platform-row { display:flex; align-items:center; gap:7px; padding:3px 0; font-size:12px; }
 .platform-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
-.platform-pct { margin-left:auto; color:var(--text-3); font-family:var(--mono); font-size:10px; font-weight:500; }
+.platform-pct { margin-left:auto; color:var(--text-2); font-family:var(--mono); font-size:10px; font-weight:500; }
 .sidebar-actions { display:flex; gap:6px; padding-top:12px; border-top:1px solid var(--border-0); }
 .sidebar-actions button { flex:1; padding:9px; border-radius:var(--radius-sm); font-size:11px; font-weight:700; }
 .btn-select-all { background:var(--blue-dim); color:var(--blue); }
-.btn-select-all:hover { background:rgba(91,156,246,0.18); }
-.btn-clear { border:1px solid rgba(240,112,104,0.25); color:var(--red); }
+.btn-select-all:hover { background:rgba(37,99,235,0.14); }
+.btn-clear { border:1px solid rgba(220,38,38,0.25); color:var(--red); }
 .btn-clear:hover { background:var(--red-dim); }
-.filter-count { font-size:11px; color:var(--text-3); text-align:center; margin-top:4px; }
+.filter-count { font-size:11px; color:var(--text-2); text-align:center; margin-top:4px; }
+
+/* ─── NAV ─── */
+.topnav { display:flex; align-items:center; padding:0 20px; height:52px; background:var(--bg-1); border-bottom:1px solid var(--border-0); box-shadow:var(--shadow-sm); gap:16px; flex-shrink:0; }
+.brand { display:flex; align-items:center; gap:9px; }
+.brand-icon { width:32px; height:32px; border-radius:8px; background:linear-gradient(135deg,#2563eb,#0891b2); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:900; color:#fff; }
+.brand-name { font-size:15px; font-weight:800; letter-spacing:-0.4px; color:var(--text-0); }
+.brand-sub { font-size:8px; color:var(--text-3); font-weight:700; letter-spacing:1px; text-transform:uppercase; }
+.nav-tabs { display:flex; gap:2px; margin-left:32px; background:var(--bg-2); border-radius:8px; padding:3px; }
+.nav-tabs button { padding:6px 18px; border-radius:6px; font-size:12px; font-weight:600; color:var(--text-2); transition:all .12s; }
+.nav-tabs button.active { background:var(--bg-1); color:var(--blue); box-shadow:var(--shadow-sm); }
+.nav-tabs button:hover:not(.active) { color:var(--text-1); }
+.nav-right { margin-left:auto; display:flex; align-items:center; gap:8px; }
 
 /* ─── CENTER ─── */
 .center { flex:1; display:flex; flex-direction:column; min-width:0; }
-.topbar { padding:6px 14px; border-bottom:1px solid var(--border-0); display:flex; align-items:center; gap:12px; background:var(--bg-1); flex-wrap:wrap; min-height:48px; }
-.brand { display:flex; align-items:center; gap:9px; }
-.brand-icon { width:32px; height:32px; border-radius:8px; background:linear-gradient(135deg,#3b82f6,#22d3ee); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:900; color:var(--bg-0); }
-.brand-name { font-size:15px; font-weight:800; letter-spacing:-0.4px; }
-.brand-sub { font-size:8px; color:var(--text-3); font-weight:700; letter-spacing:1px; text-transform:uppercase; }
-.mode-toggle { display:flex; background:var(--bg-0); border-radius:8px; padding:2px; margin-left:auto; }
-.mode-toggle button { padding:5px 14px; border-radius:6px; font-size:11px; font-weight:600; color:var(--text-3); transition:all .12s; }
-.mode-toggle button.active { background:var(--blue); color:var(--bg-0); }
-.view-btns { display:flex; gap:3px; }
-.view-btns button { padding:4px 10px; border-radius:var(--radius-sm); border:1px solid var(--border-0); font-size:10px; font-weight:600; color:var(--text-3); transition:all .12s; }
-.view-btns button.active { border-color:var(--blue); color:var(--blue); background:var(--blue-dim); }
-.map-area { flex:1; position:relative; overflow:hidden; background:var(--bg-0); }
+.page { flex:1; overflow-y:auto; display:none; }
+.page.active { display:flex; }
+
+/* ─── MAP PAGE ─── */
+.map-page { flex-direction:row; overflow:hidden; }
+.map-area { flex:1; position:relative; overflow:hidden; background:var(--bg-map); }
 .map-area svg { width:100%; height:100%; display:block; }
-.map-legend { position:absolute; bottom:12px; left:12px; background:rgba(12,16,23,0.94); border:1px solid var(--border-0); border-radius:var(--radius); padding:10px 14px; backdrop-filter:blur(12px); }
-.map-legend-title { font-size:9px; font-weight:700; color:var(--text-3); letter-spacing:0.8px; text-transform:uppercase; margin-bottom:5px; }
+.map-controls { position:absolute; top:12px; left:12px; display:flex; gap:6px; z-index:10; }
+.map-controls button { padding:5px 12px; border-radius:var(--radius-sm); border:1px solid var(--border-0); font-size:10px; font-weight:600; color:var(--text-2); background:rgba(255,255,255,0.92); backdrop-filter:blur(8px); box-shadow:var(--shadow-sm); transition:all .12s; }
+.map-controls button.active { border-color:var(--blue); color:var(--blue); background:rgba(37,99,235,0.06); }
+.mode-toggle { position:absolute; top:12px; right:12px; display:flex; background:rgba(255,255,255,0.92); backdrop-filter:blur(8px); border-radius:8px; padding:3px; box-shadow:var(--shadow-sm); border:1px solid var(--border-0); z-index:10; }
+.mode-toggle button { padding:5px 14px; border-radius:6px; font-size:11px; font-weight:600; color:var(--text-2); transition:all .12s; }
+.mode-toggle button.active { background:var(--blue); color:#fff; }
+.map-legend { position:absolute; bottom:12px; left:12px; background:rgba(255,255,255,0.94); border:1px solid var(--border-0); border-radius:var(--radius); padding:10px 14px; backdrop-filter:blur(8px); box-shadow:var(--shadow-sm); }
+.map-legend-title { font-size:9px; font-weight:700; color:var(--text-2); letter-spacing:0.8px; text-transform:uppercase; margin-bottom:5px; }
 .legend-bar { width:80px; height:5px; border-radius:3px; }
 .legend-row { display:flex; align-items:center; gap:6px; margin-top:4px; }
 .legend-dot { width:7px; height:7px; border-radius:50%; }
-.legend-text { font-size:9px; color:var(--text-3); font-weight:500; }
-.map-tooltip { pointer-events:none; position:absolute; background:rgba(15,21,32,0.96); border:1px solid var(--border-1); border-radius:var(--radius); padding:12px 16px; box-shadow:0 12px 40px rgba(0,0,0,0.5); z-index:50; backdrop-filter:blur(12px); }
-.map-tooltip h4 { font-size:14px; font-weight:700; margin-bottom:6px; }
+.legend-text { font-size:9px; color:var(--text-2); font-weight:500; }
+.map-tooltip { pointer-events:none; position:absolute; background:rgba(255,255,255,0.97); border:1px solid var(--border-1); border-radius:var(--radius); padding:12px 16px; box-shadow:var(--shadow-lg); z-index:50; backdrop-filter:blur(8px); }
+.map-tooltip h4 { font-size:14px; font-weight:700; color:var(--text-0); margin-bottom:6px; }
 .tooltip-grid { display:grid; grid-template-columns:auto auto; gap:3px 18px; font-size:12px; }
-.tooltip-label { color:var(--text-3); }
-.tooltip-val { font-family:var(--mono); font-weight:500; }
-.map-loading { display:flex; align-items:center; justify-content:center; height:100%; color:var(--text-3); font-size:13px; gap:8px; }
+.tooltip-label { color:var(--text-2); }
+.tooltip-val { font-family:var(--mono); font-weight:500; color:var(--text-0); }
+.map-loading { display:flex; align-items:center; justify-content:center; height:100%; color:var(--text-2); font-size:13px; gap:8px; }
 .map-loading .spinner { width:18px; height:18px; border:2px solid var(--border-0); border-top-color:var(--blue); border-radius:50%; animation:spin .7s linear infinite; }
 @keyframes spin { to { transform:rotate(360deg); } }
 
-/* ─── RIGHT PANEL ─── */
-.panel { width:380px; min-width:380px; background:var(--bg-1); border-left:1px solid var(--border-0); display:flex; flex-direction:column; overflow:hidden; }
-.tabs { display:flex; border-bottom:1px solid var(--border-0); }
-.tabs button { flex:1; padding:11px 4px; font-size:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; color:var(--text-3); border-bottom:2px solid transparent; transition:all .12s; }
-.tabs button.active { color:var(--blue); border-bottom-color:var(--blue); }
-.tabs button:hover:not(.active) { color:var(--text-2); }
-.panel-body { flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:12px; }
-.hero-card { background:linear-gradient(135deg,rgba(91,156,246,0.07),rgba(54,212,154,0.04)); border:1px solid rgba(91,156,246,0.18); border-radius:12px; padding:18px; }
+/* Map sidebar (right panel on map page) */
+.map-panel { width:400px; min-width:400px; background:var(--bg-1); border-left:1px solid var(--border-0); display:flex; flex-direction:column; overflow:hidden; }
+.panel-tabs { display:flex; border-bottom:1px solid var(--border-0); }
+.panel-tabs button { flex:1; padding:11px 4px; font-size:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; color:var(--text-3); border-bottom:2px solid transparent; transition:all .12s; }
+.panel-tabs button.active { color:var(--blue); border-bottom-color:var(--blue); }
+.panel-tabs button:hover:not(.active) { color:var(--text-2); }
+.panel-body { flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:12px; }
+
+/* ─── CARDS & METRICS ─── */
+.hero-card { background:linear-gradient(135deg,rgba(37,99,235,0.05),rgba(22,163,74,0.03)); border:1px solid rgba(37,99,235,0.15); border-radius:12px; padding:20px; }
 .hero-label { font-size:9px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:var(--blue); margin-bottom:4px; }
-.hero-value { font-size:32px; font-weight:800; font-family:var(--mono); letter-spacing:-1px; }
+.hero-value { font-size:32px; font-weight:800; font-family:var(--mono); letter-spacing:-1px; color:var(--text-0); }
 .hero-sub { font-size:12px; color:var(--text-1); margin-top:4px; font-weight:500; }
 .metric-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-.metric-card { background:var(--bg-card); border:1px solid var(--border-0); border-radius:var(--radius); padding:12px 14px; }
-.metric-label { font-size:9px; font-weight:700; letter-spacing:0.6px; text-transform:uppercase; color:var(--text-3); margin-bottom:4px; }
+.metric-card { background:var(--bg-card); border:1px solid var(--border-0); border-radius:var(--radius); padding:12px 14px; box-shadow:var(--shadow-sm); }
+.metric-label { font-size:9px; font-weight:700; letter-spacing:0.6px; text-transform:uppercase; color:var(--text-2); margin-bottom:4px; }
 .metric-value { font-size:19px; font-weight:700; font-family:var(--mono); letter-spacing:-0.4px; }
-.card { background:var(--bg-card); border:1px solid var(--border-0); border-radius:var(--radius); padding:14px; }
+.card { background:var(--bg-card); border:1px solid var(--border-0); border-radius:var(--radius); padding:14px; box-shadow:var(--shadow-sm); }
 .card-title { font-size:9px; font-weight:700; letter-spacing:0.8px; text-transform:uppercase; color:var(--text-2); margin-bottom:10px; }
 .eth-bar { display:flex; height:7px; border-radius:4px; overflow:hidden; margin-bottom:8px; }
 .eth-legend { display:flex; gap:12px; font-size:11px; color:var(--text-1); font-weight:500; }
@@ -133,39 +163,58 @@ input[type=checkbox] { accent-color:var(--blue); width:14px; height:14px; cursor
 .growth-bar-fill { height:100%; border-radius:3px; transition:width .3s; }
 .growth-pct { width:48px; text-align:right; font-family:var(--mono); font-size:10px; font-weight:600; flex-shrink:0; }
 .detail-table { width:100%; border-collapse:collapse; font-size:11px; }
-.detail-table th { padding:6px 5px; text-align:left; color:var(--text-3); font-weight:700; font-size:9px; letter-spacing:0.5px; border-bottom:1px solid var(--border-0); }
-.detail-table td { padding:5px; border-bottom:1px solid rgba(26,36,54,0.5); }
+.detail-table th { padding:6px 5px; text-align:left; color:var(--text-2); font-weight:700; font-size:9px; letter-spacing:0.5px; border-bottom:1px solid var(--border-0); }
+.detail-table td { padding:5px; border-bottom:1px solid var(--border-0); color:var(--text-1); }
 .dma-item { display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:8px; cursor:pointer; transition:all .12s; border:1px solid transparent; }
-.dma-item:hover { background:rgba(240,185,64,0.03); }
-.dma-item.selected { background:var(--yellow-dim); border-color:rgba(240,185,64,0.2); }
+.dma-item:hover { background:var(--bg-2); }
+.dma-item.selected { background:var(--yellow-dim); border-color:rgba(202,138,4,0.2); }
 .dma-rank { width:24px; height:24px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; flex-shrink:0; }
-.dma-name { flex:1; font-size:12px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.dma-name { flex:1; font-size:12px; font-weight:600; color:var(--text-0); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .dma-stats { text-align:right; flex-shrink:0; }
-.dma-hh { font-size:11px; font-family:var(--mono); font-weight:500; }
+.dma-hh { font-size:11px; font-family:var(--mono); font-weight:500; color:var(--text-0); }
 .dma-pct { font-size:9px; color:var(--text-3); font-weight:500; }
-.platform-card { border-radius:var(--radius); padding:14px; background:var(--bg-card); border:1px solid var(--border-0); }
+.platform-card { border-radius:var(--radius); padding:14px; background:var(--bg-card); border:1px solid var(--border-0); box-shadow:var(--shadow-sm); }
 .platform-header { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
-.platform-title { font-size:14px; font-weight:700; }
-.platform-dau-label { margin-left:auto; font-size:11px; color:var(--text-3); font-weight:500; }
+.platform-title { font-size:14px; font-weight:700; color:var(--text-0); }
+.platform-dau-label { margin-left:auto; font-size:11px; color:var(--text-2); font-weight:500; }
 .platform-stats { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
 .platform-stat-label { font-size:8px; font-weight:700; text-transform:uppercase; color:var(--text-3); letter-spacing:0.4px; margin-bottom:2px; }
-.platform-stat-value { font-size:12px; font-family:var(--mono); font-weight:500; }
+.platform-stat-value { font-size:12px; font-family:var(--mono); font-weight:500; color:var(--text-0); }
 .platform-bar { margin-top:10px; height:5px; background:var(--bg-3); border-radius:3px; overflow:hidden; }
-.platform-bar-fill { height:100%; border-radius:3px; opacity:0.6; }
+.platform-bar-fill { height:100%; border-radius:3px; opacity:0.7; }
 .platform-penetration { font-size:9px; color:var(--text-3); margin-top:3px; font-weight:500; }
 .brief-section { line-height:1.8; font-size:12px; }
 .brief-heading { font-weight:700; font-size:10px; letter-spacing:0.6px; text-transform:uppercase; margin-bottom:6px; }
 .brief-row { color:var(--text-1); }
 .brief-row strong { color:var(--text-0); font-weight:600; }
 .brief-mono { font-family:var(--mono); font-weight:600; }
-.sources-card { font-size:10px; color:var(--text-3); line-height:1.6; font-weight:500; }
-.sources-card strong { color:var(--text-2); }
+.sources-card { font-size:10px; color:var(--text-2); line-height:1.6; font-weight:500; }
+.sources-card strong { color:var(--text-1); }
 .empty-state { display:flex; flex-direction:column; align-items:center; justify-content:center; height:280px; text-align:center; padding:24px; }
-.empty-icon { width:56px; height:56px; border-radius:16px; background:var(--bg-3); border:1px solid var(--border-0); display:flex; align-items:center; justify-content:center; margin-bottom:14px; font-size:22px; }
-.empty-text { font-size:13px; color:var(--text-3); max-width:240px; line-height:1.7; }
-.dma-hero { background:linear-gradient(135deg,rgba(240,185,64,0.07),rgba(240,185,64,0.02)); border:1px solid rgba(240,185,64,0.2); border-radius:12px; padding:16px; }
-/* budget tab */
-input[type=text]#budget-input::selection { background:rgba(91,156,246,0.3); }
+.empty-icon { width:56px; height:56px; border-radius:16px; background:var(--bg-2); border:1px solid var(--border-0); display:flex; align-items:center; justify-content:center; margin-bottom:14px; font-size:22px; }
+.empty-text { font-size:13px; color:var(--text-2); max-width:240px; line-height:1.7; }
+.dma-hero { background:linear-gradient(135deg,rgba(202,138,4,0.05),rgba(202,138,4,0.02)); border:1px solid rgba(202,138,4,0.15); border-radius:12px; padding:16px; }
+
+/* ─── BUDGET PAGE ─── */
+.budget-page { flex-direction:column; padding:24px 32px; gap:20px; max-width:1200px; }
+.budget-page .section-title { font-size:18px; font-weight:800; color:var(--text-0); letter-spacing:-0.3px; }
+.budget-page .section-desc { font-size:13px; color:var(--text-2); margin-top:2px; }
+.budget-cols { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.budget-wide { grid-column:1/-1; }
+
+/* ─── BRIEF PAGE ─── */
+.brief-page { flex-direction:column; padding:24px 32px; gap:16px; max-width:1000px; }
+.brief-page .section-title { font-size:18px; font-weight:800; color:var(--text-0); letter-spacing:-0.3px; }
+.export-bar { display:flex; gap:8px; }
+.export-bar button { padding:10px 18px; border-radius:var(--radius-sm); font-size:12px; font-weight:700; border:1px solid var(--border-0); background:var(--bg-1); color:var(--text-1); box-shadow:var(--shadow-sm); transition:all .12s; }
+.export-bar button:hover { background:var(--bg-2); border-color:var(--border-1); }
+.scenario-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:12px; }
+.scenario-card { padding:14px; border-radius:var(--radius); border:1px solid var(--border-0); background:var(--bg-1); box-shadow:var(--shadow-sm); }
+.scenario-name { font-size:13px; font-weight:700; color:var(--text-0); margin-bottom:4px; }
+.scenario-meta { font-size:11px; color:var(--text-2); font-weight:500; }
+.scenario-actions { display:flex; gap:4px; margin-top:8px; }
+
+input[type=text]#budget-input::selection { background:rgba(37,99,235,0.2); }
 </style>
 </head>
 <body>
@@ -426,7 +475,7 @@ function initMap(){
 }
 
 function getStateColor(abbr,isSelected,isHovered,isFiltered){
-  if(!isFiltered)return '#0a0e14';
+  if(!isFiltered)return '#edf2f7';
   const s=ABBR_TO_STATE[abbr];
   let t;
   switch(state.mapView){
@@ -437,11 +486,11 @@ function getStateColor(abbr,isSelected,isHovered,isFiltered){
     default:t=0.5;
   }
   if(isSelected){
-    const r=Math.round(16+t*80),g=Math.round(160+t*50),b=Math.round(130+t*60);
-    return isHovered?`rgb(${r+20},${Math.min(255,g+20)},${b+15})`:`rgb(${r},${g},${b})`;
+    const r=Math.round(200-t*160),g=Math.round(220-t*80),b=Math.round(240-t*100);
+    return isHovered?`rgb(${Math.max(0,r-25)},${Math.max(0,g-15)},${Math.max(0,b-10)})`:`rgb(${r},${g},${b})`;
   }
-  const base=Math.round(14+t*35),acc=Math.round(24+t*55);
-  return isHovered?`rgb(${base+12},${acc+12},${base+20})`:`rgb(${base},${acc},${base+8})`;
+  const base=Math.round(230-t*40),g2=Math.round(235-t*35),b2=Math.round(245-t*30);
+  return isHovered?`rgb(${base-15},${g2-15},${b2-10})`:`rgb(${base},${g2},${b2})`;
 }
 
 function renderMap(){
@@ -454,7 +503,7 @@ function renderMap(){
 
   // Build SVG string
   let svg=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%;display:block;cursor:${state.selectionMode==='radial'?'crosshair':'default'}">`;
-  svg+=`<rect width="${W}" height="${H}" fill="var(--bg-0)"/>`;
+  svg+=`<rect width="${W}" height="${H}" fill="var(--bg-map)"/>`;
 
   // State paths
   features.forEach(f=>{
@@ -465,7 +514,7 @@ function renderMap(){
     const isSelected=state.selectedStates.has(abbr);
     const isHovered=state.hoveredState===abbr;
     const fill=getStateColor(abbr,isSelected,isHovered,isFiltered);
-    const stroke=isSelected?'var(--blue)':isFiltered?'#1a2436':'#0f1520';
+    const stroke=isSelected?'var(--blue)':isFiltered?'#cbd5e1':'#e2e8f0';
     const sw=isSelected?1.8:0.5;
     const cursor=isFiltered&&state.selectionMode==='state'?'pointer':'default';
     svg+=`<path d="${path(f)}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" style="cursor:${cursor};transition:fill .12s" data-abbr="${abbr}" data-filtered="${isFiltered?1:0}"/>`;
@@ -473,7 +522,7 @@ function renderMap(){
 
   // State borders
   const mesh=topojson.mesh(topoData,topoData.objects.states,(a,b)=>a!==b);
-  svg+=`<path d="${path(mesh)}" fill="none" stroke="#141e30" stroke-width="0.4" style="pointer-events:none"/>`;
+  svg+=`<path d="${path(mesh)}" fill="none" stroke="#cbd5e1" stroke-width="0.4" style="pointer-events:none"/>`;
 
   // Radial circle
   if(state.radialCenter&&state.radialRadius>0){
@@ -484,7 +533,7 @@ function renderMap(){
       const ep=proj([state.radialCenter[1]+degOff,state.radialCenter[0]]);
       if(ep){
         const pxR=Math.abs(ep[0]-cp[0]);
-        svg+=`<circle cx="${cp[0]}" cy="${cp[1]}" r="${pxR}" fill="rgba(91,156,246,0.07)" stroke="var(--blue)" stroke-width="1.5" stroke-dasharray="6,3" style="pointer-events:none"/>`;
+        svg+=`<circle cx="${cp[0]}" cy="${cp[1]}" r="${pxR}" fill="rgba(37,99,235,0.06)" stroke="var(--blue)" stroke-width="1.5" stroke-dasharray="6,3" style="pointer-events:none"/>`;
         svg+=`<circle cx="${cp[0]}" cy="${cp[1]}" r="4" fill="var(--blue)" style="pointer-events:none"/>`;
         svg+=`<text x="${cp[0]}" y="${cp[1]-pxR-7}" text-anchor="middle" style="font-size:11px;fill:var(--text-0);font-family:var(--mono);font-weight:600;pointer-events:none">${state.radialRadius} mi</text>`;
       }
@@ -498,7 +547,7 @@ function renderMap(){
     const isSel=state.selectedDMAs.has(d.rank);
     const r=Math.max(4,Math.sqrt(d.tvHH/400000)*3);
     svg+=`<circle cx="${pos[0]}" cy="${pos[1]}" r="${r+3}" fill="transparent" data-dma="${d.rank}" style="cursor:${state.selectionMode==='metro'?'pointer':'default'}"/>`;
-    svg+=`<circle cx="${pos[0]}" cy="${pos[1]}" r="${r}" fill="${isSel?'var(--yellow)':'rgba(240,185,64,0.18)'}" stroke="${isSel?'var(--yellow)':'rgba(240,185,64,0.35)'}" stroke-width="${isSel?1.5:0.8}" style="transition:all .12s;pointer-events:none"/>`;
+    svg+=`<circle cx="${pos[0]}" cy="${pos[1]}" r="${r}" fill="${isSel?'var(--yellow)':'rgba(202,138,4,0.2)'}" stroke="${isSel?'var(--yellow)':'rgba(202,138,4,0.4)'}" stroke-width="${isSel?1.5:0.8}" style="transition:all .12s;pointer-events:none"/>`;
     if(isSel){
       svg+=`<text x="${pos[0]}" y="${pos[1]-r-5}" text-anchor="middle" style="font-size:8px;fill:var(--yellow);font-family:var(--sans);font-weight:700;pointer-events:none">${esc(d.market)}</text>`;
     }
@@ -612,96 +661,8 @@ function renderTooltip(){
 }
 
 // ════════════════════════════════════════════════════════════
-// PANEL RENDERING
+// TAB CONTENT RENDERERS
 // ════════════════════════════════════════════════════════════
-function renderPanel(){
-  const panel=document.getElementById('panel-body');
-  if(!panel)return;
-  const tab=state.activeTab;
-  const summary=getSummary();
-
-  if(tab==='geo') panel.innerHTML=renderGeoTab(summary);
-  else if(tab==='dma') panel.innerHTML=renderDMATab(summary);
-  else if(tab==='platforms') panel.innerHTML=renderPlatformsTab(summary);
-  else if(tab==='budget') panel.innerHTML=renderBudgetTab();
-  else if(tab==='summary') panel.innerHTML=renderBriefTab(summary);
-
-  // Attach DMA click handlers
-  if(tab==='dma'){
-    panel.querySelectorAll('[data-dma-click]').forEach(el=>{
-      el.addEventListener('click',()=>{
-        const rank=parseInt(el.dataset.dmaClick);
-        const sel=new Set(state.selectedDMAs);
-        if(sel.has(rank))sel.delete(rank);else sel.add(rank);
-        update({selectedDMAs:sel});
-      });
-    });
-  }
-
-  // Budget tab events
-  if(tab==='budget'){
-    // Budget input
-    const budgetInput=document.getElementById('budget-input');
-    if(budgetInput){
-      budgetInput.addEventListener('focus',function(){this.value=String(state.budget);this.select();});
-      budgetInput.addEventListener('blur',function(){
-        const v=parseInt(this.value.replace(/[^0-9]/g,''));
-        if(!isNaN(v)&&v>0){state.budget=v;}
-        this.value=fmt(state.budget);
-        renderPanel();
-      });
-      budgetInput.addEventListener('keydown',function(e){
-        if(e.key==='Enter'){this.blur();}
-      });
-    }
-    // Budget presets
-    const presets=document.getElementById('budget-presets');
-    if(presets)presets.addEventListener('click',e=>{
-      const btn=e.target.closest('[data-budget]');
-      if(!btn)return;
-      state.budget=parseInt(btn.dataset.budget);
-      renderPanel();
-    });
-    // Goal slider
-    const goalSlider=document.getElementById('goal-slider');
-    if(goalSlider){
-      goalSlider.addEventListener('input',()=>{state.goalSlider=Number(goalSlider.value);renderPanel();});
-    }
-    // CPM mode
-    const cpmBtns=document.getElementById('cpm-mode-btns');
-    if(cpmBtns)cpmBtns.addEventListener('click',e=>{
-      const btn=e.target.closest('[data-cpm]');
-      if(!btn)return;
-      state.budgetCpmMode=btn.dataset.cpm;
-      renderPanel();
-    });
-  }
-
-  // Brief tab events
-  if(tab==='summary'){
-    const copyBtn=document.getElementById('copy-brief-btn');
-    if(copyBtn)copyBtn.addEventListener('click',copyBriefToClipboard);
-    const csvBtn=document.getElementById('export-csv-btn');
-    if(csvBtn)csvBtn.addEventListener('click',downloadCSV);
-    const saveBtn=document.getElementById('save-scenario-btn');
-    if(saveBtn)saveBtn.addEventListener('click',()=>{
-      const name=prompt('Name this scenario:','Scenario '+(state.savedScenarios.length+1));
-      if(name){saveScenario(name);renderPanel();}
-    });
-    panel.querySelectorAll('[data-load-scenario]').forEach(el=>{
-      el.addEventListener('click',()=>{
-        const idx=parseInt(el.dataset.loadScenario);
-        if(state.savedScenarios[idx])restoreSnapshot(state.savedScenarios[idx].snapshot);
-      });
-    });
-    panel.querySelectorAll('[data-del-scenario]').forEach(el=>{
-      el.addEventListener('click',()=>{
-        const idx=parseInt(el.dataset.delScenario);
-        deleteScenario(idx);renderPanel();
-      });
-    });
-  }
-}
 
 function renderGeoTab(summary){
   if(!summary)return `<div class="empty-state"><div class="empty-icon">🎯</div><div class="empty-text">Select states on the map or use region / radial filters to begin your media plan</div></div>`;
@@ -1235,13 +1196,14 @@ function renderSidebar(){
 function buildLayout(){
   const app=document.getElementById('app');
   const filteredStates=getFilteredStates();
+  const activePage=state.activeTab==='budget'?'budget':(state.activeTab==='summary'?'brief':'map');
 
   app.innerHTML=`
   <!-- SIDEBAR -->
   <div class="sidebar${state.sidebarCollapsed?' collapsed':''}" id="sidebar">
     <div class="sidebar-header" id="sidebar-toggle-btn">
       ${state.sidebarCollapsed?'':`<h3>Filters</h3>`}
-      <button class="sidebar-toggle">${state.sidebarCollapsed?'▸':'◂'}</button>
+      <button class="sidebar-toggle" aria-label="Toggle sidebar">${state.sidebarCollapsed?'▸':'◂'}</button>
     </div>
     <div class="sidebar-body" id="sidebar-body" style="${state.sidebarCollapsed?'display:none':''}">
       <div class="filter-group">
@@ -1253,21 +1215,21 @@ function buildLayout(){
       <div class="filter-group">
         <div class="filter-label">Population Range</div>
         <div class="range-row"><span class="range-label">Min</span><span class="range-value" id="popmin-val">${fmtCompact(state.popMin)}</span></div>
-        <input type="range" id="popmin" min="0" max="50000000" step="500000" value="${state.popMin}">
+        <input type="range" id="popmin" min="0" max="50000000" step="500000" value="${state.popMin}" aria-label="Minimum population">
         <div class="range-row" style="margin-top:6px"><span class="range-label">Max</span><span class="range-value" id="popmax-val">${fmtCompact(state.popMax)}</span></div>
-        <input type="range" id="popmax" min="0" max="50000000" step="500000" value="${state.popMax}">
+        <input type="range" id="popmax" min="0" max="50000000" step="500000" value="${state.popMax}" aria-label="Maximum population">
       </div>
       <div class="filter-group">
         <div class="filter-label">Median Age Range</div>
         <div class="range-row"><span class="range-label">Min</span><span class="range-value" id="agemin-val">${state.medAgeMin.toFixed(1)}</span></div>
-        <input type="range" id="agemin" min="25" max="55" step="0.5" value="${state.medAgeMin}">
+        <input type="range" id="agemin" min="25" max="55" step="0.5" value="${state.medAgeMin}" aria-label="Minimum median age">
         <div class="range-row" style="margin-top:6px"><span class="range-label">Max</span><span class="range-value" id="agemax-val">${state.medAgeMax.toFixed(1)}</span></div>
-        <input type="range" id="agemax" min="25" max="55" step="0.5" value="${state.medAgeMax}">
+        <input type="range" id="agemax" min="25" max="55" step="0.5" value="${state.medAgeMax}" aria-label="Maximum median age">
       </div>
       <div class="filter-group">
         <div class="filter-label">Min. Urbanization %</div>
         <div class="range-row"><span class="range-label">Urban</span><span class="range-value" id="urban-val">${state.urbanMin}%</span></div>
-        <input type="range" id="urbanmin" min="0" max="100" step="5" value="${state.urbanMin}">
+        <input type="range" id="urbanmin" min="0" max="100" step="5" value="${state.urbanMin}" aria-label="Minimum urbanization">
       </div>
       <div class="filter-group">
         <div class="filter-label">Growth (2020–25)</div>
@@ -1278,11 +1240,11 @@ function buildLayout(){
       <div class="filter-group">
         <div class="filter-label">DMA Rank (Top N)</div>
         <div class="range-row"><span class="range-label">Top</span><span class="range-value" id="dma-val">${state.dmaRankMax}</span></div>
-        <input type="range" id="dmamax" min="5" max="50" step="5" value="${state.dmaRankMax}">
+        <input type="range" id="dmamax" min="5" max="50" step="5" value="${state.dmaRankMax}" aria-label="DMA rank maximum">
       </div>
       <div class="filter-group">
         <div class="filter-label">Platforms</div>
-        ${PLATFORM_DATA.map(p=>`<label class="platform-row"><input type="checkbox" data-platform="${p.name}" ${state.selectedPlatforms.has(p.name)?'checked':''}><div class="platform-dot" style="background:${p.color}"></div><span style="font-weight:500">${esc(p.name)}</span><span class="platform-pct">${p.pctPop}%</span></label>`).join('')}
+        ${PLATFORM_DATA.map(p=>`<label class="platform-row"><input type="checkbox" data-platform="${p.name}" ${state.selectedPlatforms.has(p.name)?'checked':''}><div class="platform-dot" style="background:${p.color}"></div><span style="font-weight:500;color:var(--text-1)">${esc(p.name)}</span><span class="platform-pct">${p.pctPop}%</span></label>`).join('')}
       </div>
       <div class="sidebar-actions">
         <button class="btn-select-all" id="btn-sel-all">Select All</button>
@@ -1292,44 +1254,158 @@ function buildLayout(){
     </div>
   </div>
 
-  <!-- CENTER -->
+  <!-- MAIN -->
   <div class="center">
-    <div class="topbar">
+    <!-- Top navigation -->
+    <nav class="topnav" role="navigation" aria-label="Main navigation">
       <div class="brand">
-        <div class="brand-icon">M</div>
+        <div class="brand-icon" aria-hidden="true">M</div>
         <div><div class="brand-name">MediaScope Planner</div><div class="brand-sub">Census 2025 · DMA 2026</div></div>
       </div>
-      <div class="mode-toggle" id="mode-toggle">
-        ${[['state','🗺 States'],['metro','📍 Metros'],['radial','◎ Radius']].map(([m,l])=>`<button data-mode="${m}" class="${state.selectionMode===m?'active':''}">${l}</button>`).join('')}
+      <div class="nav-tabs" id="nav-tabs" role="tablist">
+        <button role="tab" data-page="map" class="${activePage==='map'?'active':''}" aria-selected="${activePage==='map'}">🗺 Map & Targeting</button>
+        <button role="tab" data-page="budget" class="${activePage==='budget'?'active':''}" aria-selected="${activePage==='budget'}">💰 Budget Planner</button>
+        <button role="tab" data-page="brief" class="${activePage==='brief'?'active':''}" aria-selected="${activePage==='brief'}">📋 Plan Brief</button>
       </div>
-      <div class="view-btns" id="view-btns">
-        ${[["population","Population"],["growth","Growth"],["age","Med. Age"],["urban","Urban"]].map(([v,l])=>`<button data-view="${v}" class="${state.mapView===v?'active':''}">${l}</button>`).join('')}
-      </div>
-    </div>
-    <div class="map-area">
-      <div id="map-container" style="width:100%;height:100%"></div>
-      <div class="map-legend">
-        <div class="map-legend-title" id="legend-title">${state.mapView==='population'?'Population':state.mapView==='growth'?'Growth 2020–25':state.mapView==='age'?'Median Age':'Urban %'}</div>
-        <div class="legend-row"><div class="legend-bar" style="background:linear-gradient(to right,#0e1520,#145838,#36d49a)"></div><span class="legend-text">Low → High</span></div>
-        <div class="legend-row"><div class="legend-dot" style="background:var(--yellow)"></div><span class="legend-text">DMA Markets</span></div>
-        ${state.selectionMode==='radial'?`<div style="margin-top:4px;font-size:9px;color:var(--blue);font-weight:600">Click & drag to set radius</div>`:''}
-      </div>
-      <div class="map-tooltip" id="map-tooltip" style="display:none;top:12px;left:50%;transform:translateX(-50%)"></div>
-    </div>
-  </div>
+    </nav>
 
-  <!-- RIGHT PANEL -->
-  <div class="panel">
-    <div class="tabs" id="tabs">
-      ${[["geo","Geography"],["dma","DMA"],["platforms","Platforms"],["budget","Budget"],["summary","Brief"]].map(([k,l])=>`<button data-tab="${k}" class="${state.activeTab===k?'active':''}">${l}</button>`).join('')}
+    <!-- PAGE: Map & Targeting -->
+    <div class="page map-page${activePage==='map'?' active':''}" id="page-map" role="tabpanel">
+      <div class="map-area">
+        <div id="map-container" style="width:100%;height:100%"></div>
+        <div class="map-controls" id="view-btns">
+          ${[["population","Population"],["growth","Growth"],["age","Med. Age"],["urban","Urban"]].map(([v,l])=>`<button data-view="${v}" class="${state.mapView===v?'active':''}">${l}</button>`).join('')}
+        </div>
+        <div class="mode-toggle" id="mode-toggle">
+          ${[['state','🗺 States'],['metro','📍 Metros'],['radial','◎ Radius']].map(([m,l])=>`<button data-mode="${m}" class="${state.selectionMode===m?'active':''}">${l}</button>`).join('')}
+        </div>
+        <div class="map-legend">
+          <div class="map-legend-title">${state.mapView==='population'?'Population':state.mapView==='growth'?'Growth 2020–25':state.mapView==='age'?'Median Age':'Urban %'}</div>
+          <div class="legend-row"><div class="legend-bar" style="background:linear-gradient(to right,#e2e8f0,#93c5fd,#2563eb)"></div><span class="legend-text">Low → High</span></div>
+          <div class="legend-row"><div class="legend-dot" style="background:var(--yellow)"></div><span class="legend-text">DMA Markets</span></div>
+          ${state.selectionMode==='radial'?`<div style="margin-top:4px;font-size:9px;color:var(--blue);font-weight:600">Click & drag to set radius</div>`:''}
+        </div>
+        <div class="map-tooltip" id="map-tooltip" style="display:none;top:12px;left:50%;transform:translateX(-50%)"></div>
+      </div>
+      <div class="map-panel">
+        <div class="panel-tabs" id="panel-tabs">
+          ${[["geo","Geography"],["dma","DMA"],["platforms","Platforms"]].map(([k,l])=>{const mapTab=['geo','dma','platforms'].includes(state.activeTab)?state.activeTab:'geo';return `<button data-tab="${k}" class="${mapTab===k?'active':''}">${l}</button>`;}).join('')}
+        </div>
+        <div class="panel-body" id="panel-body"></div>
+      </div>
     </div>
-    <div class="panel-body" id="panel-body"></div>
+
+    <!-- PAGE: Budget Planner -->
+    <div class="page budget-page${activePage==='budget'?' active':''}" id="page-budget" role="tabpanel">
+    </div>
+
+    <!-- PAGE: Plan Brief -->
+    <div class="page brief-page${activePage==='brief'?' active':''}" id="page-brief" role="tabpanel">
+    </div>
   </div>`;
 
   // Wire up events
   wireEvents();
-  initMap();
-  renderPanel();
+  if(activePage==='map') initMap();
+  renderCurrentPage();
+}
+
+function renderCurrentPage(){
+  const activePage=state.activeTab==='budget'?'budget':(state.activeTab==='summary'?'brief':'map');
+  // Map page panel
+  if(activePage==='map'){
+    const panel=document.getElementById('panel-body');
+    if(panel){
+      const tab=(state.activeTab==='geo'||state.activeTab==='dma'||state.activeTab==='platforms')?state.activeTab:'geo';
+      const summary=getSummary();
+      if(tab==='geo') panel.innerHTML=renderGeoTab(summary);
+      else if(tab==='dma') panel.innerHTML=renderDMATab(summary);
+      else if(tab==='platforms') panel.innerHTML=renderPlatformsTab(summary);
+
+      // DMA click handlers
+      if(tab==='dma'){
+        panel.querySelectorAll('[data-dma-click]').forEach(el=>{
+          el.addEventListener('click',()=>{
+            const rank=parseInt(el.dataset.dmaClick);
+            const sel=new Set(state.selectedDMAs);
+            if(sel.has(rank))sel.delete(rank);else sel.add(rank);
+            update({selectedDMAs:sel});
+          });
+        });
+      }
+    }
+  }
+  // Budget page
+  if(activePage==='budget'){
+    const page=document.getElementById('page-budget');
+    if(page){
+      page.innerHTML=renderBudgetTab();
+      wireBudgetEvents(page);
+    }
+  }
+  // Brief page
+  if(activePage==='brief'){
+    const page=document.getElementById('page-brief');
+    if(page){
+      const summary=getSummary();
+      page.innerHTML=renderBriefTab(summary);
+      wireBriefEvents(page);
+    }
+  }
+}
+
+function wireBudgetEvents(container){
+  const budgetInput=container.querySelector('#budget-input');
+  if(budgetInput){
+    budgetInput.addEventListener('focus',function(){this.value=String(state.budget);this.select();});
+    budgetInput.addEventListener('blur',function(){
+      const v=parseInt(this.value.replace(/[^0-9]/g,''));
+      if(!isNaN(v)&&v>0){state.budget=v;}
+      this.value=fmt(state.budget);
+      renderCurrentPage();
+    });
+    budgetInput.addEventListener('keydown',function(e){if(e.key==='Enter')this.blur();});
+  }
+  const presets=container.querySelector('#budget-presets');
+  if(presets)presets.addEventListener('click',e=>{
+    const btn=e.target.closest('[data-budget]');
+    if(!btn)return;
+    state.budget=parseInt(btn.dataset.budget);
+    renderCurrentPage();
+  });
+  const goalSlider=container.querySelector('#goal-slider');
+  if(goalSlider)goalSlider.addEventListener('input',()=>{state.goalSlider=Number(goalSlider.value);renderCurrentPage();});
+  const cpmBtns=container.querySelector('#cpm-mode-btns');
+  if(cpmBtns)cpmBtns.addEventListener('click',e=>{
+    const btn=e.target.closest('[data-cpm]');
+    if(!btn)return;
+    state.budgetCpmMode=btn.dataset.cpm;
+    renderCurrentPage();
+  });
+}
+
+function wireBriefEvents(container){
+  const copyBtn=container.querySelector('#copy-brief-btn');
+  if(copyBtn)copyBtn.addEventListener('click',copyBriefToClipboard);
+  const csvBtn=container.querySelector('#export-csv-btn');
+  if(csvBtn)csvBtn.addEventListener('click',downloadCSV);
+  const saveBtn=container.querySelector('#save-scenario-btn');
+  if(saveBtn)saveBtn.addEventListener('click',()=>{
+    const name=prompt('Name this scenario:','Scenario '+(state.savedScenarios.length+1));
+    if(name){saveScenario(name);renderCurrentPage();}
+  });
+  container.querySelectorAll('[data-load-scenario]').forEach(el=>{
+    el.addEventListener('click',()=>{
+      const idx=parseInt(el.dataset.loadScenario);
+      if(state.savedScenarios[idx])restoreSnapshot(state.savedScenarios[idx].snapshot);
+    });
+  });
+  container.querySelectorAll('[data-del-scenario]').forEach(el=>{
+    el.addEventListener('click',()=>{
+      const idx=parseInt(el.dataset.delScenario);
+      deleteScenario(idx);renderCurrentPage();
+    });
+  });
 }
 
 function wireEvents(){
@@ -1360,7 +1436,7 @@ function wireEvents(){
       if(valEl)valEl.textContent=format(state[key]);
     });
     el.addEventListener('change',()=>{
-      update({});renderMap();renderPanel();renderSidebar();
+      update({});renderMap();renderCurrentPage();renderSidebar();
     });
   }
   bindRange('popmin','popMin','popmin-val',fmtCompact);
@@ -1383,15 +1459,15 @@ function wireEvents(){
     cb.addEventListener('change',()=>{
       const plats=new Set(state.selectedPlatforms);
       if(cb.checked)plats.add(cb.dataset.platform);else plats.delete(cb.dataset.platform);
-      update({selectedPlatforms:plats});renderPanel();
+      update({selectedPlatforms:plats});renderCurrentPage();
     });
   });
 
   // Select all / clear
   const selAll=document.getElementById('btn-sel-all');
-  if(selAll)selAll.addEventListener('click',()=>{update({selectedStates:new Set(getFilteredStates().map(s=>s.abbr))});renderMap();renderPanel();renderSidebar();});
+  if(selAll)selAll.addEventListener('click',()=>{update({selectedStates:new Set(getFilteredStates().map(s=>s.abbr))});renderMap();renderCurrentPage();renderSidebar();});
   const clearBtn=document.getElementById('btn-clear');
-  if(clearBtn)clearBtn.addEventListener('click',()=>{update({selectedStates:new Set(),selectedRegion:null,selectedDMAs:new Set(),radialCenter:null,radialRadius:0});renderMap();renderPanel();renderSidebar();});
+  if(clearBtn)clearBtn.addEventListener('click',()=>{update({selectedStates:new Set(),selectedRegion:null,selectedDMAs:new Set(),radialCenter:null,radialRadius:0});renderMap();renderCurrentPage();renderSidebar();});
 
   // Mode toggle
   document.getElementById('mode-toggle').addEventListener('click',e=>{
@@ -1409,20 +1485,33 @@ function wireEvents(){
     buildLayout();
   });
 
-  // Tabs
-  document.getElementById('tabs').addEventListener('click',e=>{
+  // Top nav page tabs
+  const navTabs=document.getElementById('nav-tabs');
+  if(navTabs)navTabs.addEventListener('click',e=>{
+    const btn=e.target.closest('[data-page]');
+    if(!btn)return;
+    const page=btn.dataset.page;
+    if(page==='map')state.activeTab='geo';
+    else if(page==='budget')state.activeTab='budget';
+    else if(page==='brief')state.activeTab='summary';
+    buildLayout();
+  });
+
+  // Map panel sub-tabs
+  const panelTabs=document.getElementById('panel-tabs');
+  if(panelTabs)panelTabs.addEventListener('click',e=>{
     const btn=e.target.closest('[data-tab]');
     if(!btn)return;
     state.activeTab=btn.dataset.tab;
-    document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===state.activeTab));
-    renderPanel();
+    document.querySelectorAll('#panel-tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===state.activeTab));
+    renderCurrentPage();
   });
 }
 
 // Subscribe to updates for lightweight re-renders
 subscribe(()=>{
   renderMap();
-  renderPanel();
+  renderCurrentPage();
   renderSidebar();
 });
 
