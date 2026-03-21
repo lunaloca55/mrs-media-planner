@@ -4,822 +4,947 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MediaScope Planner — Census 2025 Ad Targeting Tool</title>
-<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg-primary: #0b0f18;
-    --bg-secondary: #101623;
-    --bg-tertiary: #161d2e;
-    --bg-card: #131a2a;
-    --border-subtle: #1e2a42;
-    --border-active: #3b82f6;
-    --text-primary: #f0f2f7;
-    --text-secondary: #b0b8cc;
-    --text-tertiary: #7a86a0;
-    --text-muted: #505c74;
-    --accent-green: #34d399;
-    --accent-green-dim: #1a3a2e;
-    --accent-red: #f87171;
-    --accent-red-dim: #3a1a1a;
-    --accent-blue: #60a5fa;
-    --accent-yellow: #fbbf24;
-    --accent-purple: #a78bfa;
-    --accent-cyan: #22d3ee;
-  }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  html, body, #root { width:100%; height:100%; overflow:hidden; background:var(--bg-primary); }
-  input[type=range] { -webkit-appearance:none; appearance:none; height:5px; border-radius:3px; background:var(--bg-tertiary); outline:none; cursor:pointer; width:100%; }
-  input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:var(--accent-blue); cursor:pointer; border:2px solid var(--bg-primary); }
-  input[type=range]::-moz-range-thumb { width:14px; height:14px; border-radius:50%; background:var(--accent-blue); border:2px solid var(--bg-primary); cursor:pointer; }
-  input[type=checkbox] { accent-color:var(--accent-blue); width:15px; height:15px; }
-  ::-webkit-scrollbar { width:6px; }
-  ::-webkit-scrollbar-track { background:var(--bg-secondary); }
-  ::-webkit-scrollbar-thumb { background:var(--border-subtle); border-radius:3px; }
-  ::-webkit-scrollbar-thumb:hover { background:#2e3a55; }
-  button { font-family: 'Instrument Sans', sans-serif; }
-  .map-tooltip { pointer-events:none; position:absolute; background:var(--bg-card); border:1px solid var(--border-subtle); border-radius:10px; padding:12px 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); z-index:100; }
+:root {
+  --bg-0: #06080d;
+  --bg-1: #0c1017;
+  --bg-2: #111822;
+  --bg-3: #17202f;
+  --bg-card: #0f1520;
+  --border-0: #1a2436;
+  --border-1: #243352;
+  --border-active: #3b82f6;
+  --text-0: #f2f4f8;
+  --text-1: #c0c8d8;
+  --text-2: #8892a8;
+  --text-3: #5a6478;
+  --blue: #5b9cf6;
+  --blue-dim: rgba(91,156,246,0.1);
+  --green: #36d49a;
+  --green-dim: rgba(54,212,154,0.08);
+  --red: #f07068;
+  --red-dim: rgba(240,112,104,0.08);
+  --yellow: #f0b940;
+  --yellow-dim: rgba(240,185,64,0.08);
+  --purple: #a78bfa;
+  --cyan: #34d4e8;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'DM Sans', system-ui, sans-serif;
+  --radius: 10px;
+  --radius-sm: 6px;
+}
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { height:100%; }
+body { height:100%; font-family:var(--sans); background:var(--bg-0); color:var(--text-0); overflow:hidden; }
+#app { display:flex; height:100vh; }
+button { font-family:var(--sans); cursor:pointer; border:none; background:none; color:inherit; }
+input[type=range] { -webkit-appearance:none; appearance:none; height:4px; border-radius:2px; background:var(--bg-3); outline:none; cursor:pointer; width:100%; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:var(--blue); cursor:pointer; border:2px solid var(--bg-1); box-shadow:0 0 8px rgba(91,156,246,0.3); }
+input[type=range]::-moz-range-thumb { width:14px; height:14px; border-radius:50%; background:var(--blue); border:2px solid var(--bg-1); cursor:pointer; }
+input[type=checkbox] { accent-color:var(--blue); width:14px; height:14px; cursor:pointer; }
+::-webkit-scrollbar { width:5px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border-0); border-radius:3px; }
+::-webkit-scrollbar-thumb:hover { background:var(--border-1); }
+
+/* ─── LAYOUT ─── */
+.sidebar { width:290px; min-width:290px; background:var(--bg-1); border-right:1px solid var(--border-0); display:flex; flex-direction:column; transition:width .2s, min-width .2s; overflow:hidden; }
+.sidebar.collapsed { width:44px; min-width:44px; }
+.sidebar-header { padding:10px 14px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border-0); min-height:44px; }
+.sidebar-header h3 { font-size:10px; font-weight:700; letter-spacing:1.8px; text-transform:uppercase; color:var(--blue); }
+.sidebar-toggle { font-size:16px; color:var(--text-2); transition:color .15s; padding:4px; }
+.sidebar-toggle:hover { color:var(--blue); }
+.sidebar-body { flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:18px; }
+.filter-label { font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--text-2); margin-bottom:6px; }
+.filter-group { display:flex; flex-direction:column; }
+.range-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
+.range-label { font-size:11px; color:var(--text-3); }
+.range-value { font-size:11px; color:var(--text-0); font-family:var(--mono); font-weight:500; }
+.btn-grid { display:grid; grid-template-columns:1fr 1fr; gap:5px; }
+.btn-pill { padding:7px 6px; border-radius:var(--radius-sm); border:1px solid var(--border-0); font-size:11px; font-weight:600; color:var(--text-2); transition:all .12s; text-align:center; }
+.btn-pill:hover { border-color:var(--border-1); color:var(--text-1); }
+.btn-pill.active { background:var(--blue-dim); border-color:var(--blue); color:var(--blue); }
+.btn-row { display:flex; gap:4px; }
+.btn-row .btn-pill { flex:1; }
+.platform-row { display:flex; align-items:center; gap:7px; padding:3px 0; font-size:12px; }
+.platform-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.platform-pct { margin-left:auto; color:var(--text-3); font-family:var(--mono); font-size:10px; font-weight:500; }
+.sidebar-actions { display:flex; gap:6px; padding-top:12px; border-top:1px solid var(--border-0); }
+.sidebar-actions button { flex:1; padding:9px; border-radius:var(--radius-sm); font-size:11px; font-weight:700; }
+.btn-select-all { background:var(--blue-dim); color:var(--blue); }
+.btn-select-all:hover { background:rgba(91,156,246,0.18); }
+.btn-clear { border:1px solid rgba(240,112,104,0.25); color:var(--red); }
+.btn-clear:hover { background:var(--red-dim); }
+.filter-count { font-size:11px; color:var(--text-3); text-align:center; margin-top:4px; }
+
+/* ─── CENTER ─── */
+.center { flex:1; display:flex; flex-direction:column; min-width:0; }
+.topbar { padding:6px 14px; border-bottom:1px solid var(--border-0); display:flex; align-items:center; gap:12px; background:var(--bg-1); flex-wrap:wrap; min-height:48px; }
+.brand { display:flex; align-items:center; gap:9px; }
+.brand-icon { width:32px; height:32px; border-radius:8px; background:linear-gradient(135deg,#3b82f6,#22d3ee); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:900; color:var(--bg-0); }
+.brand-name { font-size:15px; font-weight:800; letter-spacing:-0.4px; }
+.brand-sub { font-size:8px; color:var(--text-3); font-weight:700; letter-spacing:1px; text-transform:uppercase; }
+.mode-toggle { display:flex; background:var(--bg-0); border-radius:8px; padding:2px; margin-left:auto; }
+.mode-toggle button { padding:5px 14px; border-radius:6px; font-size:11px; font-weight:600; color:var(--text-3); transition:all .12s; }
+.mode-toggle button.active { background:var(--blue); color:var(--bg-0); }
+.view-btns { display:flex; gap:3px; }
+.view-btns button { padding:4px 10px; border-radius:var(--radius-sm); border:1px solid var(--border-0); font-size:10px; font-weight:600; color:var(--text-3); transition:all .12s; }
+.view-btns button.active { border-color:var(--blue); color:var(--blue); background:var(--blue-dim); }
+.map-area { flex:1; position:relative; overflow:hidden; background:var(--bg-0); }
+.map-area svg { width:100%; height:100%; display:block; }
+.map-legend { position:absolute; bottom:12px; left:12px; background:rgba(12,16,23,0.94); border:1px solid var(--border-0); border-radius:var(--radius); padding:10px 14px; backdrop-filter:blur(12px); }
+.map-legend-title { font-size:9px; font-weight:700; color:var(--text-3); letter-spacing:0.8px; text-transform:uppercase; margin-bottom:5px; }
+.legend-bar { width:80px; height:5px; border-radius:3px; }
+.legend-row { display:flex; align-items:center; gap:6px; margin-top:4px; }
+.legend-dot { width:7px; height:7px; border-radius:50%; }
+.legend-text { font-size:9px; color:var(--text-3); font-weight:500; }
+.map-tooltip { pointer-events:none; position:absolute; background:rgba(15,21,32,0.96); border:1px solid var(--border-1); border-radius:var(--radius); padding:12px 16px; box-shadow:0 12px 40px rgba(0,0,0,0.5); z-index:50; backdrop-filter:blur(12px); }
+.map-tooltip h4 { font-size:14px; font-weight:700; margin-bottom:6px; }
+.tooltip-grid { display:grid; grid-template-columns:auto auto; gap:3px 18px; font-size:12px; }
+.tooltip-label { color:var(--text-3); }
+.tooltip-val { font-family:var(--mono); font-weight:500; }
+.map-loading { display:flex; align-items:center; justify-content:center; height:100%; color:var(--text-3); font-size:13px; gap:8px; }
+.map-loading .spinner { width:18px; height:18px; border:2px solid var(--border-0); border-top-color:var(--blue); border-radius:50%; animation:spin .7s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* ─── RIGHT PANEL ─── */
+.panel { width:380px; min-width:380px; background:var(--bg-1); border-left:1px solid var(--border-0); display:flex; flex-direction:column; overflow:hidden; }
+.tabs { display:flex; border-bottom:1px solid var(--border-0); }
+.tabs button { flex:1; padding:11px 4px; font-size:10px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; color:var(--text-3); border-bottom:2px solid transparent; transition:all .12s; }
+.tabs button.active { color:var(--blue); border-bottom-color:var(--blue); }
+.tabs button:hover:not(.active) { color:var(--text-2); }
+.panel-body { flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:12px; }
+.hero-card { background:linear-gradient(135deg,rgba(91,156,246,0.07),rgba(54,212,154,0.04)); border:1px solid rgba(91,156,246,0.18); border-radius:12px; padding:18px; }
+.hero-label { font-size:9px; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:var(--blue); margin-bottom:4px; }
+.hero-value { font-size:32px; font-weight:800; font-family:var(--mono); letter-spacing:-1px; }
+.hero-sub { font-size:12px; color:var(--text-1); margin-top:4px; font-weight:500; }
+.metric-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.metric-card { background:var(--bg-card); border:1px solid var(--border-0); border-radius:var(--radius); padding:12px 14px; }
+.metric-label { font-size:9px; font-weight:700; letter-spacing:0.6px; text-transform:uppercase; color:var(--text-3); margin-bottom:4px; }
+.metric-value { font-size:19px; font-weight:700; font-family:var(--mono); letter-spacing:-0.4px; }
+.card { background:var(--bg-card); border:1px solid var(--border-0); border-radius:var(--radius); padding:14px; }
+.card-title { font-size:9px; font-weight:700; letter-spacing:0.8px; text-transform:uppercase; color:var(--text-2); margin-bottom:10px; }
+.eth-bar { display:flex; height:7px; border-radius:4px; overflow:hidden; margin-bottom:8px; }
+.eth-legend { display:flex; gap:12px; font-size:11px; color:var(--text-1); font-weight:500; }
+.growth-row { display:flex; align-items:center; gap:7px; font-size:11px; margin-bottom:4px; }
+.growth-abbr { width:24px; color:var(--text-1); font-weight:600; flex-shrink:0; }
+.growth-bar-bg { flex:1; height:6px; background:var(--bg-3); border-radius:3px; overflow:hidden; }
+.growth-bar-fill { height:100%; border-radius:3px; transition:width .3s; }
+.growth-pct { width:48px; text-align:right; font-family:var(--mono); font-size:10px; font-weight:600; flex-shrink:0; }
+.detail-table { width:100%; border-collapse:collapse; font-size:11px; }
+.detail-table th { padding:6px 5px; text-align:left; color:var(--text-3); font-weight:700; font-size:9px; letter-spacing:0.5px; border-bottom:1px solid var(--border-0); }
+.detail-table td { padding:5px; border-bottom:1px solid rgba(26,36,54,0.5); }
+.dma-item { display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:8px; cursor:pointer; transition:all .12s; border:1px solid transparent; }
+.dma-item:hover { background:rgba(240,185,64,0.03); }
+.dma-item.selected { background:var(--yellow-dim); border-color:rgba(240,185,64,0.2); }
+.dma-rank { width:24px; height:24px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:700; flex-shrink:0; }
+.dma-name { flex:1; font-size:12px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.dma-stats { text-align:right; flex-shrink:0; }
+.dma-hh { font-size:11px; font-family:var(--mono); font-weight:500; }
+.dma-pct { font-size:9px; color:var(--text-3); font-weight:500; }
+.platform-card { border-radius:var(--radius); padding:14px; background:var(--bg-card); border:1px solid var(--border-0); }
+.platform-header { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+.platform-title { font-size:14px; font-weight:700; }
+.platform-dau-label { margin-left:auto; font-size:11px; color:var(--text-3); font-weight:500; }
+.platform-stats { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+.platform-stat-label { font-size:8px; font-weight:700; text-transform:uppercase; color:var(--text-3); letter-spacing:0.4px; margin-bottom:2px; }
+.platform-stat-value { font-size:12px; font-family:var(--mono); font-weight:500; }
+.platform-bar { margin-top:10px; height:5px; background:var(--bg-3); border-radius:3px; overflow:hidden; }
+.platform-bar-fill { height:100%; border-radius:3px; opacity:0.6; }
+.platform-penetration { font-size:9px; color:var(--text-3); margin-top:3px; font-weight:500; }
+.brief-section { line-height:1.8; font-size:12px; }
+.brief-heading { font-weight:700; font-size:10px; letter-spacing:0.6px; text-transform:uppercase; margin-bottom:6px; }
+.brief-row { color:var(--text-1); }
+.brief-row strong { color:var(--text-0); font-weight:600; }
+.brief-mono { font-family:var(--mono); font-weight:600; }
+.sources-card { font-size:10px; color:var(--text-3); line-height:1.6; font-weight:500; }
+.sources-card strong { color:var(--text-2); }
+.empty-state { display:flex; flex-direction:column; align-items:center; justify-content:center; height:280px; text-align:center; padding:24px; }
+.empty-icon { width:56px; height:56px; border-radius:16px; background:var(--bg-3); border:1px solid var(--border-0); display:flex; align-items:center; justify-content:center; margin-bottom:14px; font-size:22px; }
+.empty-text { font-size:13px; color:var(--text-3); max-width:240px; line-height:1.7; }
+.dma-hero { background:linear-gradient(135deg,rgba(240,185,64,0.07),rgba(240,185,64,0.02)); border:1px solid rgba(240,185,64,0.2); border-radius:12px; padding:16px; }
 </style>
 </head>
 <body>
-<div id="root"></div>
-<script type="text/babel">
-const { useState, useMemo, useCallback, useEffect, useRef } = React;
+<div id="app"></div>
 
-// ══════════════════════════════════════════════════════════════
+<script>
+// ════════════════════════════════════════════════════════════
 // DATA
-// ══════════════════════════════════════════════════════════════
-const STATE_DATA = [
-  {fips:"01",name:"Alabama",abbr:"AL",pop2025:5193088,pop2020:5024803,births:57680,deaths:59868,intlMig:8946,domMig:23358,medAge:39.3,urban:58,white:65.36,black:26.09,hisp:4.6,topEmployer:"Redstone Arsenal",capital:"Montgomery"},
-  {fips:"02",name:"Alaska",abbr:"AK",pop2025:737270,pop2020:733603,births:8867,deaths:5559,intlMig:1959,domMig:-4525,medAge:35.8,urban:65,white:60.7,black:3.2,hisp:7.8,topEmployer:"Providence Health",capital:"Juneau"},
-  {fips:"04",name:"Arizona",abbr:"AZ",pop2025:7623818,pop2020:7151507,births:78926,deaths:71277,intlMig:28219,domMig:31107,medAge:39.0,urban:89,white:63.2,black:4.5,hisp:24.4,topEmployer:"Banner Health",capital:"Phoenix"},
-  {fips:"05",name:"Arkansas",abbr:"AR",pop2025:3114791,pop2020:3011873,births:35414,deaths:36638,intlMig:5470,domMig:14475,medAge:38.5,urban:55,white:70.86,black:14.91,hisp:8.5,topEmployer:"Walmart",capital:"Little Rock"},
-  {fips:"06",name:"California",abbr:"CA",pop2025:39355309,pop2020:39538223,births:398632,deaths:288917,intlMig:109278,domMig:-229077,medAge:37.9,urban:94,white:43.95,black:5.6,hisp:33.7,topEmployer:"Univ. of California",capital:"Sacramento"},
-  {fips:"08",name:"Colorado",abbr:"CO",pop2025:6012561,pop2020:5773714,births:65380,deaths:44772,intlMig:15356,domMig:-12100,medAge:37.7,urban:86,white:73.46,black:4.1,hisp:18.1,topEmployer:"Univ. of Colorado",capital:"Denver"},
-  {fips:"09",name:"Connecticut",abbr:"CT",pop2025:3688496,pop2020:3605944,births:34700,deaths:32417,intlMig:17534,domMig:-5945,medAge:41.1,urban:86,white:67.57,black:10.69,hisp:17.3,topEmployer:"Yale New Haven",capital:"Hartford"},
-  {fips:"10",name:"Delaware",abbr:"DE",pop2025:1059952,pop2020:989948,births:10328,deaths:10882,intlMig:3473,domMig:6855,medAge:41.6,urban:83,white:61.82,black:21.94,hisp:9.9,topEmployer:"ChristianaCare",capital:"Dover"},
-  {fips:"11",name:"District of Columbia",abbr:"DC",pop2025:693645,pop2020:689545,births:7336,deaths:4820,intlMig:3915,domMig:-4128,medAge:34.8,urban:100,white:38.0,black:44.0,hisp:11.3,topEmployer:"Federal Gov.",capital:"Washington"},
-  {fips:"12",name:"Florida",abbr:"FL",pop2025:23462518,pop2020:21538187,births:225971,deaths:227304,intlMig:178674,domMig:22517,medAge:42.6,urban:92,white:59.91,black:15.1,hisp:21.5,topEmployer:"Publix",capital:"Tallahassee"},
-  {fips:"13",name:"Georgia",abbr:"GA",pop2025:11302748,pop2020:10711908,births:126446,deaths:97815,intlMig:42579,domMig:27333,medAge:37.6,urban:74,white:52.46,black:31.34,hisp:10.5,topEmployer:"Walmart",capital:"Atlanta"},
-  {fips:"15",name:"Hawaii",abbr:"HI",pop2025:1432820,pop2020:1455271,births:14631,deaths:12607,intlMig:4768,domMig:-8876,medAge:40.9,urban:86,white:22.51,black:1.6,hisp:10.7,topEmployer:"Univ. of Hawaii",capital:"Honolulu"},
-  {fips:"16",name:"Idaho",abbr:"ID",pop2025:2029733,pop2020:1839106,births:23695,deaths:16795,intlMig:2148,domMig:19915,medAge:37.3,urban:69,white:83.35,black:0.9,hisp:13.0,topEmployer:"St. Luke's Health",capital:"Boise"},
-  {fips:"17",name:"Illinois",abbr:"IL",pop2025:12719141,pop2020:12812508,births:125129,deaths:114226,intlMig:44752,domMig:-40017,medAge:39.0,urban:87,white:63.33,black:13.79,hisp:18.2,topEmployer:"Walmart",capital:"Springfield"},
-  {fips:"18",name:"Indiana",abbr:"IN",pop2025:6973333,pop2020:6785528,births:79648,deaths:71087,intlMig:17852,domMig:12197,medAge:38.1,urban:71,white:78.51,black:9.4,hisp:8.2,topEmployer:"Walmart",capital:"Indianapolis"},
-  {fips:"19",name:"Iowa",abbr:"IA",pop2025:3238387,pop2020:3190369,births:36470,deaths:33521,intlMig:5903,domMig:-970,medAge:38.6,urban:63,white:85.59,black:3.8,hisp:6.8,topEmployer:"Univ. of Iowa",capital:"Des Moines"},
-  {fips:"20",name:"Kansas",abbr:"KS",pop2025:2977220,pop2020:2937880,births:34416,deaths:29465,intlMig:7440,domMig:-519,medAge:37.4,urban:72,white:77.92,black:5.8,hisp:12.8,topEmployer:"Walmart",capital:"Topeka"},
-  {fips:"21",name:"Kentucky",abbr:"KY",pop2025:4606864,pop2020:4505836,births:52982,deaths:53065,intlMig:15709,domMig:7269,medAge:39.1,urban:59,white:83.68,black:8.0,hisp:4.5,topEmployer:"Walmart",capital:"Frankfort"},
-  {fips:"22",name:"Louisiana",abbr:"LA",pop2025:4618189,pop2020:4657757,births:51886,deaths:49112,intlMig:14900,domMig:-14387,medAge:38.0,urban:72,white:57.97,black:31.05,hisp:6.9,topEmployer:"Walmart",capital:"Baton Rouge"},
-  {fips:"23",name:"Maine",abbr:"ME",pop2025:1414874,pop2020:1362359,births:11783,deaths:16802,intlMig:4040,domMig:7406,medAge:44.8,urban:39,white:91.34,black:1.4,hisp:2.0,topEmployer:"Maine Medical Ctr",capital:"Augusta"},
-  {fips:"24",name:"Maryland",abbr:"MD",pop2025:6265347,pop2020:6177224,births:66614,deaths:57165,intlMig:29764,domMig:-19267,medAge:39.4,urban:86,white:49.6,black:29.59,hisp:11.8,topEmployer:"Giant Food",capital:"Annapolis"},
-  {fips:"25",name:"Massachusetts",abbr:"MA",pop2025:7154084,pop2020:7029917,births:67076,deaths:60660,intlMig:36693,domMig:-19023,medAge:40.0,urban:91,white:70.73,black:7.0,hisp:13.0,topEmployer:"Mass Gen Brigham",capital:"Boston"},
-  {fips:"26",name:"Michigan",abbr:"MI",pop2025:10127884,pop2020:10077331,births:104780,deaths:107792,intlMig:24627,domMig:-8137,medAge:40.2,urban:73,white:74.78,black:13.4,hisp:5.6,topEmployer:"General Motors",capital:"Lansing"},
-  {fips:"27",name:"Minnesota",abbr:"MN",pop2025:5830405,pop2020:5706494,births:64764,deaths:51082,intlMig:17843,domMig:-5782,medAge:38.8,urban:72,white:78.35,black:6.4,hisp:6.1,topEmployer:"Mayo Clinic",capital:"Saint Paul"},
-  {fips:"28",name:"Mississippi",abbr:"MS",pop2025:2954160,pop2020:2961279,births:34312,deaths:35825,intlMig:3581,domMig:-3744,medAge:38.6,urban:46,white:56.31,black:36.96,hisp:3.6,topEmployer:"Walmart",capital:"Jackson"},
-  {fips:"29",name:"Missouri",abbr:"MO",pop2025:6270541,pop2020:6154913,births:68944,deaths:69182,intlMig:14152,domMig:13174,medAge:39.0,urban:69,white:78.33,black:11.4,hisp:4.7,topEmployer:"Walmart",capital:"Jefferson City"},
-  {fips:"30",name:"Montana",abbr:"MT",pop2025:1144694,pop2020:1084225,births:11227,deaths:11723,intlMig:1270,domMig:10193,medAge:40.4,urban:53,white:85.68,black:0.4,hisp:4.3,topEmployer:"Talen Montana",capital:"Helena"},
-  {fips:"31",name:"Nebraska",abbr:"NE",pop2025:2018006,pop2020:1961504,births:24516,deaths:18913,intlMig:7076,domMig:-2052,medAge:37.2,urban:73,white:79.88,black:4.8,hisp:12.3,topEmployer:"Univ. of Nebraska",capital:"Lincoln"},
-  {fips:"32",name:"Nevada",abbr:"NV",pop2025:3282188,pop2020:3104614,births:33996,deaths:28262,intlMig:14152,domMig:16627,medAge:39.1,urban:94,white:53.18,black:9.4,hisp:26.6,topEmployer:"MGM Resorts",capital:"Carson City"},
-  {fips:"33",name:"New Hampshire",abbr:"NH",pop2025:1415342,pop2020:1377529,births:12072,deaths:13779,intlMig:4379,domMig:3508,medAge:43.3,urban:58,white:88.93,black:1.5,hisp:4.3,topEmployer:"Walmart",capital:"Concord"},
-  {fips:"34",name:"New Jersey",abbr:"NJ",pop2025:9548215,pop2020:9288994,births:97048,deaths:82009,intlMig:57340,domMig:-22508,medAge:40.1,urban:94,white:56.93,black:12.8,hisp:21.7,topEmployer:"Wakefern Food",capital:"Trenton"},
-  {fips:"35",name:"New Mexico",abbr:"NM",pop2025:2125498,pop2020:2117522,births:22008,deaths:21393,intlMig:5011,domMig:-2048,medAge:39.4,urban:75,white:53.62,black:1.8,hisp:49.3,topEmployer:"Univ. of NM",capital:"Santa Fe"},
-  {fips:"36",name:"New York",abbr:"NY",pop2025:20002427,pop2020:20201249,births:209968,deaths:165510,intlMig:119756,domMig:-155853,medAge:39.8,urban:87,white:57.07,black:14.73,hisp:19.5,topEmployer:"Northwell Health",capital:"Albany"},
-  {fips:"37",name:"North Carolina",abbr:"NC",pop2025:11197968,pop2020:10439388,births:121414,deaths:102498,intlMig:42427,domMig:56429,medAge:39.1,urban:67,white:63.26,black:20.58,hisp:10.7,topEmployer:"Walmart",capital:"Raleigh"},
-  {fips:"38",name:"North Dakota",abbr:"ND",pop2025:799358,pop2020:779094,births:9818,deaths:7595,intlMig:4067,domMig:-1766,medAge:35.9,urban:61,white:83.89,black:3.2,hisp:4.4,topEmployer:"Sanford Health",capital:"Bismarck"},
-  {fips:"39",name:"Ohio",abbr:"OH",pop2025:11900510,pop2020:11799448,births:127513,deaths:131459,intlMig:31858,domMig:-5449,medAge:39.7,urban:76,white:77.82,black:12.28,hisp:4.4,topEmployer:"Walmart",capital:"Columbus"},
-  {fips:"40",name:"Oklahoma",abbr:"OK",pop2025:4123288,pop2020:3959353,births:48706,deaths:44252,intlMig:7777,domMig:17009,medAge:37.0,urban:65,white:66.79,black:7.1,hisp:12.1,topEmployer:"Walmart",capital:"Oklahoma City"},
-  {fips:"41",name:"Oregon",abbr:"OR",pop2025:4273586,pop2020:4237256,births:39816,deaths:41093,intlMig:12789,domMig:-2927,medAge:40.4,urban:80,white:76.62,black:1.8,hisp:14.0,topEmployer:"Intel",capital:"Salem"},
-  {fips:"42",name:"Pennsylvania",abbr:"PA",pop2025:13059432,pop2020:13002700,births:125860,deaths:142277,intlMig:40816,domMig:-29270,medAge:40.9,urban:76,white:75.8,black:10.73,hisp:8.4,topEmployer:"UPMC",capital:"Harrisburg"},
-  {fips:"44",name:"Rhode Island",abbr:"RI",pop2025:1114521,pop2020:1097379,births:10656,deaths:11277,intlMig:4872,domMig:-2281,medAge:40.6,urban:91,white:72.34,black:5.7,hisp:16.6,topEmployer:"Lifespan Health",capital:"Providence"},
-  {fips:"45",name:"South Carolina",abbr:"SC",pop2025:5570274,pop2020:5118425,births:57356,deaths:56688,intlMig:14260,domMig:43289,medAge:40.2,urban:68,white:64.06,black:25.3,hisp:7.0,topEmployer:"Walmart",capital:"Columbia"},
-  {fips:"46",name:"South Dakota",abbr:"SD",pop2025:935094,pop2020:886667,births:11463,deaths:9365,intlMig:2541,domMig:2530,medAge:38.0,urban:57,white:81.52,black:2.2,hisp:4.5,topEmployer:"Sanford Health",capital:"Pierre"},
-  {fips:"47",name:"Tennessee",abbr:"TN",pop2025:7315076,pop2020:6910840,births:81180,deaths:79296,intlMig:22267,domMig:38282,medAge:38.9,urban:66,white:73.48,black:15.87,hisp:6.7,topEmployer:"Walmart",capital:"Nashville"},
-  {fips:"48",name:"Texas",abbr:"TX",pop2025:31709821,pop2020:29145505,births:376380,deaths:220932,intlMig:119534,domMig:69268,medAge:35.6,urban:84,white:53.93,black:12.23,hisp:27.8,topEmployer:"Walmart",capital:"Austin"},
-  {fips:"49",name:"Utah",abbr:"UT",pop2025:3538904,pop2020:3271616,births:48506,deaths:21981,intlMig:6992,domMig:13543,medAge:32.0,urban:90,white:80.7,black:1.2,hisp:15.1,topEmployer:"Intermountain",capital:"Salt Lake City"},
-  {fips:"50",name:"Vermont",abbr:"VT",pop2025:648063,pop2020:643077,births:5371,deaths:6900,intlMig:1913,domMig:662,medAge:43.1,urban:35,white:91.41,black:1.2,hisp:2.3,topEmployer:"UVM Medical Ctr",capital:"Montpelier"},
-  {fips:"51",name:"Virginia",abbr:"VA",pop2025:8880107,pop2020:8631393,births:94906,deaths:72651,intlMig:36192,domMig:-9519,medAge:39.0,urban:76,white:61.73,black:18.75,hisp:10.8,topEmployer:"Mars Inc.",capital:"Richmond"},
-  {fips:"53",name:"Washington",abbr:"WA",pop2025:8001020,pop2020:7705281,births:86028,deaths:62605,intlMig:32792,domMig:-9389,medAge:38.3,urban:83,white:67.84,black:3.7,hisp:14.0,topEmployer:"Amazon",capital:"Olympia"},
-  {fips:"54",name:"West Virginia",abbr:"WV",pop2025:1766147,pop2020:1793716,births:17218,deaths:24860,intlMig:2504,domMig:-3155,medAge:42.7,urban:45,white:90.9,black:3.5,hisp:1.8,topEmployer:"WVU Medicine",capital:"Charleston"},
-  {fips:"55",name:"Wisconsin",abbr:"WI",pop2025:5972787,pop2020:5893718,births:60672,deaths:58445,intlMig:16227,domMig:-1773,medAge:40.2,urban:67,white:81.32,black:6.2,hisp:7.6,topEmployer:"Univ. of Wisconsin",capital:"Madison"},
-  {fips:"56",name:"Wyoming",abbr:"WY",pop2025:592720,pop2020:576851,births:6213,deaths:5493,intlMig:605,domMig:3823,medAge:39.1,urban:62,white:85.96,black:0.8,hisp:10.6,topEmployer:"Walmart",capital:"Cheyenne"},
-];
-const FIPS_TO_ABBR = {}; STATE_DATA.forEach(s => FIPS_TO_ABBR[s.fips] = s.abbr);
-const ABBR_TO_STATE = {}; STATE_DATA.forEach(s => ABBR_TO_STATE[s.abbr] = s);
-
-const DMA_DATA = [
-  {rank:1,market:"New York",tvHH:7841830,pct:6.25,lat:40.7128,lon:-74.006},
-  {rank:2,market:"Los Angeles",tvHH:5904400,pct:4.70,lat:34.0522,lon:-118.244},
-  {rank:3,market:"Chicago",tvHH:3751900,pct:2.99,lat:41.8781,lon:-87.6298},
-  {rank:4,market:"Dallas-Ft. Worth",tvHH:3298630,pct:2.63,lat:32.7767,lon:-96.797},
-  {rank:5,market:"Philadelphia",tvHH:3174280,pct:2.53,lat:39.9526,lon:-75.1652},
-  {rank:6,market:"Houston",tvHH:2919480,pct:2.33,lat:29.7604,lon:-95.3698},
-  {rank:7,market:"Atlanta",tvHH:2803210,pct:2.23,lat:33.749,lon:-84.388},
-  {rank:8,market:"Washington, D.C.",tvHH:2692300,pct:2.15,lat:38.9072,lon:-77.0369},
-  {rank:9,market:"San Francisco",tvHH:2611450,pct:2.08,lat:37.7749,lon:-122.419},
-  {rank:10,market:"Boston",tvHH:2599640,pct:2.07,lat:42.3601,lon:-71.0589},
-  {rank:11,market:"Tampa-St. Pete",tvHH:2283670,pct:1.82,lat:27.9506,lon:-82.4572},
-  {rank:12,market:"Phoenix",tvHH:2250310,pct:1.79,lat:33.4484,lon:-112.074},
-  {rank:13,market:"Seattle-Tacoma",tvHH:2145510,pct:1.71,lat:47.6062,lon:-122.332},
-  {rank:14,market:"Detroit",tvHH:1971580,pct:1.57,lat:42.3314,lon:-83.0458},
-  {rank:15,market:"Orlando",tvHH:1967250,pct:1.57,lat:28.5383,lon:-81.3792},
-  {rank:16,market:"Minneapolis",tvHH:1921880,pct:1.53,lat:44.9778,lon:-93.265},
-  {rank:17,market:"Denver",tvHH:1853860,pct:1.48,lat:39.7392,lon:-104.991},
-  {rank:18,market:"Miami",tvHH:1818820,pct:1.45,lat:25.7617,lon:-80.1918},
-  {rank:19,market:"Cleveland",tvHH:1562740,pct:1.25,lat:41.4993,lon:-81.6944},
-  {rank:20,market:"Sacramento",tvHH:1554500,pct:1.24,lat:38.5816,lon:-121.494},
-  {rank:21,market:"Charlotte",tvHH:1431200,pct:1.14,lat:35.2271,lon:-80.8431},
-  {rank:22,market:"Raleigh-Durham",tvHH:1375650,pct:1.10,lat:35.7796,lon:-78.6382},
-  {rank:23,market:"Portland",tvHH:1287980,pct:1.03,lat:45.5152,lon:-122.679},
-  {rank:24,market:"St. Louis",tvHH:1260410,pct:1.00,lat:38.627,lon:-90.1994},
-  {rank:25,market:"Nashville",tvHH:1249620,pct:1.00,lat:36.1627,lon:-86.7816},
-  {rank:26,market:"Indianapolis",tvHH:1248430,pct:0.99,lat:39.7684,lon:-86.1581},
-  {rank:27,market:"Salt Lake City",tvHH:1177360,pct:0.94,lat:40.7608,lon:-111.891},
-  {rank:28,market:"Pittsburgh",tvHH:1163160,pct:0.93,lat:40.4406,lon:-79.9959},
-  {rank:29,market:"Baltimore",tvHH:1162820,pct:0.93,lat:39.2904,lon:-76.6122},
-  {rank:30,market:"San Diego",tvHH:1142730,pct:0.91,lat:32.7157,lon:-117.161},
-  {rank:31,market:"San Antonio",tvHH:1112950,pct:0.89,lat:29.4241,lon:-98.4936},
-  {rank:32,market:"Austin",tvHH:1074520,pct:0.86,lat:30.2672,lon:-97.7431},
-  {rank:33,market:"Hartford",tvHH:1073870,pct:0.86,lat:41.7658,lon:-72.6734},
-  {rank:34,market:"Columbus",tvHH:1051690,pct:0.84,lat:39.9612,lon:-82.9988},
-  {rank:35,market:"Kansas City",tvHH:1050260,pct:0.84,lat:39.0997,lon:-94.5786},
-  {rank:36,market:"Greenville",tvHH:992700,pct:0.79,lat:34.8526,lon:-82.394},
-  {rank:37,market:"W. Palm Beach",tvHH:972630,pct:0.77,lat:26.7153,lon:-80.0534},
-  {rank:38,market:"Cincinnati",tvHH:966430,pct:0.77,lat:39.1031,lon:-84.512},
-  {rank:39,market:"Milwaukee",tvHH:957240,pct:0.76,lat:43.0389,lon:-87.9065},
-  {rank:40,market:"Las Vegas",tvHH:925260,pct:0.74,lat:36.1699,lon:-115.14},
-  {rank:41,market:"Jacksonville",tvHH:845890,pct:0.67,lat:30.3322,lon:-81.6557},
-  {rank:42,market:"Harrisburg",tvHH:809240,pct:0.64,lat:40.2732,lon:-76.8867},
-  {rank:43,market:"Grand Rapids",tvHH:808010,pct:0.64,lat:42.9634,lon:-85.6681},
-  {rank:44,market:"Norfolk",tvHH:783500,pct:0.62,lat:36.8508,lon:-76.2859},
-  {rank:45,market:"Oklahoma City",tvHH:777860,pct:0.62,lat:35.4676,lon:-97.5164},
-  {rank:46,market:"Birmingham",tvHH:777400,pct:0.62,lat:33.5207,lon:-86.8025},
-  {rank:47,market:"Greensboro",tvHH:773020,pct:0.62,lat:36.0726,lon:-79.792},
-  {rank:48,market:"Louisville",tvHH:724710,pct:0.58,lat:38.2527,lon:-85.7585},
-  {rank:49,market:"Albuquerque",tvHH:716200,pct:0.57,lat:35.0844,lon:-106.651},
-  {rank:50,market:"New Orleans",tvHH:685140,pct:0.55,lat:29.9511,lon:-90.0715},
+// ════════════════════════════════════════════════════════════
+const STATE_DATA=[
+{fips:"01",name:"Alabama",abbr:"AL",pop2025:5193088,pop2020:5024803,births:57680,deaths:59868,intlMig:8946,domMig:23358,medAge:39.3,urban:58,white:65.36,black:26.09,hisp:4.6,topEmployer:"Redstone Arsenal",capital:"Montgomery"},
+{fips:"02",name:"Alaska",abbr:"AK",pop2025:737270,pop2020:733603,births:8867,deaths:5559,intlMig:1959,domMig:-4525,medAge:35.8,urban:65,white:60.7,black:3.2,hisp:7.8,topEmployer:"Providence Health",capital:"Juneau"},
+{fips:"04",name:"Arizona",abbr:"AZ",pop2025:7623818,pop2020:7151507,births:78926,deaths:71277,intlMig:28219,domMig:31107,medAge:39.0,urban:89,white:63.2,black:4.5,hisp:24.4,topEmployer:"Banner Health",capital:"Phoenix"},
+{fips:"05",name:"Arkansas",abbr:"AR",pop2025:3114791,pop2020:3011873,births:35414,deaths:36638,intlMig:5470,domMig:14475,medAge:38.5,urban:55,white:70.86,black:14.91,hisp:8.5,topEmployer:"Walmart",capital:"Little Rock"},
+{fips:"06",name:"California",abbr:"CA",pop2025:39355309,pop2020:39538223,births:398632,deaths:288917,intlMig:109278,domMig:-229077,medAge:37.9,urban:94,white:43.95,black:5.6,hisp:33.7,topEmployer:"Univ. of California",capital:"Sacramento"},
+{fips:"08",name:"Colorado",abbr:"CO",pop2025:6012561,pop2020:5773714,births:65380,deaths:44772,intlMig:15356,domMig:-12100,medAge:37.7,urban:86,white:73.46,black:4.1,hisp:18.1,topEmployer:"Univ. of Colorado",capital:"Denver"},
+{fips:"09",name:"Connecticut",abbr:"CT",pop2025:3688496,pop2020:3605944,births:34700,deaths:32417,intlMig:17534,domMig:-5945,medAge:41.1,urban:86,white:67.57,black:10.69,hisp:17.3,topEmployer:"Yale New Haven",capital:"Hartford"},
+{fips:"10",name:"Delaware",abbr:"DE",pop2025:1059952,pop2020:989948,births:10328,deaths:10882,intlMig:3473,domMig:6855,medAge:41.6,urban:83,white:61.82,black:21.94,hisp:9.9,topEmployer:"ChristianaCare",capital:"Dover"},
+{fips:"11",name:"District of Columbia",abbr:"DC",pop2025:693645,pop2020:689545,births:7336,deaths:4820,intlMig:3915,domMig:-4128,medAge:34.8,urban:100,white:38.0,black:44.0,hisp:11.3,topEmployer:"Federal Gov.",capital:"Washington"},
+{fips:"12",name:"Florida",abbr:"FL",pop2025:23462518,pop2020:21538187,births:225971,deaths:227304,intlMig:178674,domMig:22517,medAge:42.6,urban:92,white:59.91,black:15.1,hisp:21.5,topEmployer:"Publix",capital:"Tallahassee"},
+{fips:"13",name:"Georgia",abbr:"GA",pop2025:11302748,pop2020:10711908,births:126446,deaths:97815,intlMig:42579,domMig:27333,medAge:37.6,urban:74,white:52.46,black:31.34,hisp:10.5,topEmployer:"Walmart",capital:"Atlanta"},
+{fips:"15",name:"Hawaii",abbr:"HI",pop2025:1432820,pop2020:1455271,births:14631,deaths:12607,intlMig:4768,domMig:-8876,medAge:40.9,urban:86,white:22.51,black:1.6,hisp:10.7,topEmployer:"Univ. of Hawaii",capital:"Honolulu"},
+{fips:"16",name:"Idaho",abbr:"ID",pop2025:2029733,pop2020:1839106,births:23695,deaths:16795,intlMig:2148,domMig:19915,medAge:37.3,urban:69,white:83.35,black:0.9,hisp:13.0,topEmployer:"St. Luke's Health",capital:"Boise"},
+{fips:"17",name:"Illinois",abbr:"IL",pop2025:12719141,pop2020:12812508,births:125129,deaths:114226,intlMig:44752,domMig:-40017,medAge:39.0,urban:87,white:63.33,black:13.79,hisp:18.2,topEmployer:"Walmart",capital:"Springfield"},
+{fips:"18",name:"Indiana",abbr:"IN",pop2025:6973333,pop2020:6785528,births:79648,deaths:71087,intlMig:17852,domMig:12197,medAge:38.1,urban:71,white:78.51,black:9.4,hisp:8.2,topEmployer:"Walmart",capital:"Indianapolis"},
+{fips:"19",name:"Iowa",abbr:"IA",pop2025:3238387,pop2020:3190369,births:36470,deaths:33521,intlMig:5903,domMig:-970,medAge:38.6,urban:63,white:85.59,black:3.8,hisp:6.8,topEmployer:"Univ. of Iowa",capital:"Des Moines"},
+{fips:"20",name:"Kansas",abbr:"KS",pop2025:2977220,pop2020:2937880,births:34416,deaths:29465,intlMig:7440,domMig:-519,medAge:37.4,urban:72,white:77.92,black:5.8,hisp:12.8,topEmployer:"Walmart",capital:"Topeka"},
+{fips:"21",name:"Kentucky",abbr:"KY",pop2025:4606864,pop2020:4505836,births:52982,deaths:53065,intlMig:15709,domMig:7269,medAge:39.1,urban:59,white:83.68,black:8.0,hisp:4.5,topEmployer:"Walmart",capital:"Frankfort"},
+{fips:"22",name:"Louisiana",abbr:"LA",pop2025:4618189,pop2020:4657757,births:51886,deaths:49112,intlMig:14900,domMig:-14387,medAge:38.0,urban:72,white:57.97,black:31.05,hisp:6.9,topEmployer:"Walmart",capital:"Baton Rouge"},
+{fips:"23",name:"Maine",abbr:"ME",pop2025:1414874,pop2020:1362359,births:11783,deaths:16802,intlMig:4040,domMig:7406,medAge:44.8,urban:39,white:91.34,black:1.4,hisp:2.0,topEmployer:"Maine Medical Ctr",capital:"Augusta"},
+{fips:"24",name:"Maryland",abbr:"MD",pop2025:6265347,pop2020:6177224,births:66614,deaths:57165,intlMig:29764,domMig:-19267,medAge:39.4,urban:86,white:49.6,black:29.59,hisp:11.8,topEmployer:"Giant Food",capital:"Annapolis"},
+{fips:"25",name:"Massachusetts",abbr:"MA",pop2025:7154084,pop2020:7029917,births:67076,deaths:60660,intlMig:36693,domMig:-19023,medAge:40.0,urban:91,white:70.73,black:7.0,hisp:13.0,topEmployer:"Mass Gen Brigham",capital:"Boston"},
+{fips:"26",name:"Michigan",abbr:"MI",pop2025:10127884,pop2020:10077331,births:104780,deaths:107792,intlMig:24627,domMig:-8137,medAge:40.2,urban:73,white:74.78,black:13.4,hisp:5.6,topEmployer:"General Motors",capital:"Lansing"},
+{fips:"27",name:"Minnesota",abbr:"MN",pop2025:5830405,pop2020:5706494,births:64764,deaths:51082,intlMig:17843,domMig:-5782,medAge:38.8,urban:72,white:78.35,black:6.4,hisp:6.1,topEmployer:"Mayo Clinic",capital:"Saint Paul"},
+{fips:"28",name:"Mississippi",abbr:"MS",pop2025:2954160,pop2020:2961279,births:34312,deaths:35825,intlMig:3581,domMig:-3744,medAge:38.6,urban:46,white:56.31,black:36.96,hisp:3.6,topEmployer:"Walmart",capital:"Jackson"},
+{fips:"29",name:"Missouri",abbr:"MO",pop2025:6270541,pop2020:6154913,births:68944,deaths:69182,intlMig:14152,domMig:13174,medAge:39.0,urban:69,white:78.33,black:11.4,hisp:4.7,topEmployer:"Walmart",capital:"Jefferson City"},
+{fips:"30",name:"Montana",abbr:"MT",pop2025:1144694,pop2020:1084225,births:11227,deaths:11723,intlMig:1270,domMig:10193,medAge:40.4,urban:53,white:85.68,black:0.4,hisp:4.3,topEmployer:"Talen Montana",capital:"Helena"},
+{fips:"31",name:"Nebraska",abbr:"NE",pop2025:2018006,pop2020:1961504,births:24516,deaths:18913,intlMig:7076,domMig:-2052,medAge:37.2,urban:73,white:79.88,black:4.8,hisp:12.3,topEmployer:"Univ. of Nebraska",capital:"Lincoln"},
+{fips:"32",name:"Nevada",abbr:"NV",pop2025:3282188,pop2020:3104614,births:33996,deaths:28262,intlMig:14152,domMig:16627,medAge:39.1,urban:94,white:53.18,black:9.4,hisp:26.6,topEmployer:"MGM Resorts",capital:"Carson City"},
+{fips:"33",name:"New Hampshire",abbr:"NH",pop2025:1415342,pop2020:1377529,births:12072,deaths:13779,intlMig:4379,domMig:3508,medAge:43.3,urban:58,white:88.93,black:1.5,hisp:4.3,topEmployer:"Walmart",capital:"Concord"},
+{fips:"34",name:"New Jersey",abbr:"NJ",pop2025:9548215,pop2020:9288994,births:97048,deaths:82009,intlMig:57340,domMig:-22508,medAge:40.1,urban:94,white:56.93,black:12.8,hisp:21.7,topEmployer:"Wakefern Food",capital:"Trenton"},
+{fips:"35",name:"New Mexico",abbr:"NM",pop2025:2125498,pop2020:2117522,births:22008,deaths:21393,intlMig:5011,domMig:-2048,medAge:39.4,urban:75,white:53.62,black:1.8,hisp:49.3,topEmployer:"Univ. of NM",capital:"Santa Fe"},
+{fips:"36",name:"New York",abbr:"NY",pop2025:20002427,pop2020:20201249,births:209968,deaths:165510,intlMig:119756,domMig:-155853,medAge:39.8,urban:87,white:57.07,black:14.73,hisp:19.5,topEmployer:"Northwell Health",capital:"Albany"},
+{fips:"37",name:"North Carolina",abbr:"NC",pop2025:11197968,pop2020:10439388,births:121414,deaths:102498,intlMig:42427,domMig:56429,medAge:39.1,urban:67,white:63.26,black:20.58,hisp:10.7,topEmployer:"Walmart",capital:"Raleigh"},
+{fips:"38",name:"North Dakota",abbr:"ND",pop2025:799358,pop2020:779094,births:9818,deaths:7595,intlMig:4067,domMig:-1766,medAge:35.9,urban:61,white:83.89,black:3.2,hisp:4.4,topEmployer:"Sanford Health",capital:"Bismarck"},
+{fips:"39",name:"Ohio",abbr:"OH",pop2025:11900510,pop2020:11799448,births:127513,deaths:131459,intlMig:31858,domMig:-5449,medAge:39.7,urban:76,white:77.82,black:12.28,hisp:4.4,topEmployer:"Walmart",capital:"Columbus"},
+{fips:"40",name:"Oklahoma",abbr:"OK",pop2025:4123288,pop2020:3959353,births:48706,deaths:44252,intlMig:7777,domMig:17009,medAge:37.0,urban:65,white:66.79,black:7.1,hisp:12.1,topEmployer:"Walmart",capital:"Oklahoma City"},
+{fips:"41",name:"Oregon",abbr:"OR",pop2025:4273586,pop2020:4237256,births:39816,deaths:41093,intlMig:12789,domMig:-2927,medAge:40.4,urban:80,white:76.62,black:1.8,hisp:14.0,topEmployer:"Intel",capital:"Salem"},
+{fips:"42",name:"Pennsylvania",abbr:"PA",pop2025:13059432,pop2020:13002700,births:125860,deaths:142277,intlMig:40816,domMig:-29270,medAge:40.9,urban:76,white:75.8,black:10.73,hisp:8.4,topEmployer:"UPMC",capital:"Harrisburg"},
+{fips:"44",name:"Rhode Island",abbr:"RI",pop2025:1114521,pop2020:1097379,births:10656,deaths:11277,intlMig:4872,domMig:-2281,medAge:40.6,urban:91,white:72.34,black:5.7,hisp:16.6,topEmployer:"Lifespan Health",capital:"Providence"},
+{fips:"45",name:"South Carolina",abbr:"SC",pop2025:5570274,pop2020:5118425,births:57356,deaths:56688,intlMig:14260,domMig:43289,medAge:40.2,urban:68,white:64.06,black:25.3,hisp:7.0,topEmployer:"Walmart",capital:"Columbia"},
+{fips:"46",name:"South Dakota",abbr:"SD",pop2025:935094,pop2020:886667,births:11463,deaths:9365,intlMig:2541,domMig:2530,medAge:38.0,urban:57,white:81.52,black:2.2,hisp:4.5,topEmployer:"Sanford Health",capital:"Pierre"},
+{fips:"47",name:"Tennessee",abbr:"TN",pop2025:7315076,pop2020:6910840,births:81180,deaths:79296,intlMig:22267,domMig:38282,medAge:38.9,urban:66,white:73.48,black:15.87,hisp:6.7,topEmployer:"Walmart",capital:"Nashville"},
+{fips:"48",name:"Texas",abbr:"TX",pop2025:31709821,pop2020:29145505,births:376380,deaths:220932,intlMig:119534,domMig:69268,medAge:35.6,urban:84,white:53.93,black:12.23,hisp:27.8,topEmployer:"Walmart",capital:"Austin"},
+{fips:"49",name:"Utah",abbr:"UT",pop2025:3538904,pop2020:3271616,births:48506,deaths:21981,intlMig:6992,domMig:13543,medAge:32.0,urban:90,white:80.7,black:1.2,hisp:15.1,topEmployer:"Intermountain",capital:"Salt Lake City"},
+{fips:"50",name:"Vermont",abbr:"VT",pop2025:648063,pop2020:643077,births:5371,deaths:6900,intlMig:1913,domMig:662,medAge:43.1,urban:35,white:91.41,black:1.2,hisp:2.3,topEmployer:"UVM Medical Ctr",capital:"Montpelier"},
+{fips:"51",name:"Virginia",abbr:"VA",pop2025:8880107,pop2020:8631393,births:94906,deaths:72651,intlMig:36192,domMig:-9519,medAge:39.0,urban:76,white:61.73,black:18.75,hisp:10.8,topEmployer:"Mars Inc.",capital:"Richmond"},
+{fips:"53",name:"Washington",abbr:"WA",pop2025:8001020,pop2020:7705281,births:86028,deaths:62605,intlMig:32792,domMig:-9389,medAge:38.3,urban:83,white:67.84,black:3.7,hisp:14.0,topEmployer:"Amazon",capital:"Olympia"},
+{fips:"54",name:"West Virginia",abbr:"WV",pop2025:1766147,pop2020:1793716,births:17218,deaths:24860,intlMig:2504,domMig:-3155,medAge:42.7,urban:45,white:90.9,black:3.5,hisp:1.8,topEmployer:"WVU Medicine",capital:"Charleston"},
+{fips:"55",name:"Wisconsin",abbr:"WI",pop2025:5972787,pop2020:5893718,births:60672,deaths:58445,intlMig:16227,domMig:-1773,medAge:40.2,urban:67,white:81.32,black:6.2,hisp:7.6,topEmployer:"Univ. of Wisconsin",capital:"Madison"},
+{fips:"56",name:"Wyoming",abbr:"WY",pop2025:592720,pop2020:576851,births:6213,deaths:5493,intlMig:605,domMig:3823,medAge:39.1,urban:62,white:85.96,black:0.8,hisp:10.6,topEmployer:"Walmart",capital:"Cheyenne"},
 ];
 
-const PLATFORM_DATA = [
-  {name:"YouTube",dauUS:"157.5M",mauUS:"254M",pctPop:46,color:"#FF0000"},
-  {name:"Facebook",dauUS:"143.6M",mauUS:"210M",pctPop:42,color:"#1877F2"},
-  {name:"Instagram",dauUS:"94.4M",mauUS:"172M",pctPop:28,color:"#E4405F"},
-  {name:"TikTok",dauUS:"81.5M",mauUS:"136M",pctPop:24,color:"#69C9D0"},
-  {name:"Snapchat",dauUS:"53.0M",mauUS:"106M",pctPop:16,color:"#FFFC00"},
-  {name:"Reddit",dauUS:"51.6M",mauUS:"94M",pctPop:15,color:"#FF4500"},
-  {name:"X (Twitter)",dauUS:"46.8M",mauUS:"104M",pctPop:14,color:"#1DA1F2"},
-  {name:"Pinterest",dauUS:"~31M",mauUS:"98M",pctPop:9,color:"#BD081C"},
+const FIPS_TO_ABBR={};STATE_DATA.forEach(s=>FIPS_TO_ABBR[s.fips]=s.abbr);
+const ABBR_TO_STATE={};STATE_DATA.forEach(s=>ABBR_TO_STATE[s.abbr]=s);
+
+const DMA_DATA=[
+{rank:1,market:"New York",tvHH:7841830,pct:6.25,lat:40.7128,lon:-74.006},
+{rank:2,market:"Los Angeles",tvHH:5904400,pct:4.70,lat:34.0522,lon:-118.244},
+{rank:3,market:"Chicago",tvHH:3751900,pct:2.99,lat:41.8781,lon:-87.6298},
+{rank:4,market:"Dallas-Ft. Worth",tvHH:3298630,pct:2.63,lat:32.7767,lon:-96.797},
+{rank:5,market:"Philadelphia",tvHH:3174280,pct:2.53,lat:39.9526,lon:-75.1652},
+{rank:6,market:"Houston",tvHH:2919480,pct:2.33,lat:29.7604,lon:-95.3698},
+{rank:7,market:"Atlanta",tvHH:2803210,pct:2.23,lat:33.749,lon:-84.388},
+{rank:8,market:"Washington, D.C.",tvHH:2692300,pct:2.15,lat:38.9072,lon:-77.0369},
+{rank:9,market:"San Francisco",tvHH:2611450,pct:2.08,lat:37.7749,lon:-122.419},
+{rank:10,market:"Boston",tvHH:2599640,pct:2.07,lat:42.3601,lon:-71.0589},
+{rank:11,market:"Tampa-St. Pete",tvHH:2283670,pct:1.82,lat:27.9506,lon:-82.4572},
+{rank:12,market:"Phoenix",tvHH:2250310,pct:1.79,lat:33.4484,lon:-112.074},
+{rank:13,market:"Seattle-Tacoma",tvHH:2145510,pct:1.71,lat:47.6062,lon:-122.332},
+{rank:14,market:"Detroit",tvHH:1971580,pct:1.57,lat:42.3314,lon:-83.0458},
+{rank:15,market:"Orlando",tvHH:1967250,pct:1.57,lat:28.5383,lon:-81.3792},
+{rank:16,market:"Minneapolis",tvHH:1921880,pct:1.53,lat:44.9778,lon:-93.265},
+{rank:17,market:"Denver",tvHH:1853860,pct:1.48,lat:39.7392,lon:-104.991},
+{rank:18,market:"Miami",tvHH:1818820,pct:1.45,lat:25.7617,lon:-80.1918},
+{rank:19,market:"Cleveland",tvHH:1562740,pct:1.25,lat:41.4993,lon:-81.6944},
+{rank:20,market:"Sacramento",tvHH:1554500,pct:1.24,lat:38.5816,lon:-121.494},
+{rank:21,market:"Charlotte",tvHH:1431200,pct:1.14,lat:35.2271,lon:-80.8431},
+{rank:22,market:"Raleigh-Durham",tvHH:1375650,pct:1.10,lat:35.7796,lon:-78.6382},
+{rank:23,market:"Portland",tvHH:1287980,pct:1.03,lat:45.5152,lon:-122.679},
+{rank:24,market:"St. Louis",tvHH:1260410,pct:1.00,lat:38.627,lon:-90.1994},
+{rank:25,market:"Nashville",tvHH:1249620,pct:1.00,lat:36.1627,lon:-86.7816},
+{rank:26,market:"Indianapolis",tvHH:1248430,pct:0.99,lat:39.7684,lon:-86.1581},
+{rank:27,market:"Salt Lake City",tvHH:1177360,pct:0.94,lat:40.7608,lon:-111.891},
+{rank:28,market:"Pittsburgh",tvHH:1163160,pct:0.93,lat:40.4406,lon:-79.9959},
+{rank:29,market:"Baltimore",tvHH:1162820,pct:0.93,lat:39.2904,lon:-76.6122},
+{rank:30,market:"San Diego",tvHH:1142730,pct:0.91,lat:32.7157,lon:-117.161},
+{rank:31,market:"San Antonio",tvHH:1112950,pct:0.89,lat:29.4241,lon:-98.4936},
+{rank:32,market:"Austin",tvHH:1074520,pct:0.86,lat:30.2672,lon:-97.7431},
+{rank:33,market:"Hartford",tvHH:1073870,pct:0.86,lat:41.7658,lon:-72.6734},
+{rank:34,market:"Columbus",tvHH:1051690,pct:0.84,lat:39.9612,lon:-82.9988},
+{rank:35,market:"Kansas City",tvHH:1050260,pct:0.84,lat:39.0997,lon:-94.5786},
+{rank:36,market:"Greenville",tvHH:992700,pct:0.79,lat:34.8526,lon:-82.394},
+{rank:37,market:"W. Palm Beach",tvHH:972630,pct:0.77,lat:26.7153,lon:-80.0534},
+{rank:38,market:"Cincinnati",tvHH:966430,pct:0.77,lat:39.1031,lon:-84.512},
+{rank:39,market:"Milwaukee",tvHH:957240,pct:0.76,lat:43.0389,lon:-87.9065},
+{rank:40,market:"Las Vegas",tvHH:925260,pct:0.74,lat:36.1699,lon:-115.14},
+{rank:41,market:"Jacksonville",tvHH:845890,pct:0.67,lat:30.3322,lon:-81.6557},
+{rank:42,market:"Harrisburg",tvHH:809240,pct:0.64,lat:40.2732,lon:-76.8867},
+{rank:43,market:"Grand Rapids",tvHH:808010,pct:0.64,lat:42.9634,lon:-85.6681},
+{rank:44,market:"Norfolk",tvHH:783500,pct:0.62,lat:36.8508,lon:-76.2859},
+{rank:45,market:"Oklahoma City",tvHH:777860,pct:0.62,lat:35.4676,lon:-97.5164},
+{rank:46,market:"Birmingham",tvHH:777400,pct:0.62,lat:33.5207,lon:-86.8025},
+{rank:47,market:"Greensboro",tvHH:773020,pct:0.62,lat:36.0726,lon:-79.792},
+{rank:48,market:"Louisville",tvHH:724710,pct:0.58,lat:38.2527,lon:-85.7585},
+{rank:49,market:"Albuquerque",tvHH:716200,pct:0.57,lat:35.0844,lon:-106.651},
+{rank:50,market:"New Orleans",tvHH:685140,pct:0.55,lat:29.9511,lon:-90.0715},
 ];
 
-const CENSUS_REGIONS = {
+const PLATFORM_DATA=[
+{name:"YouTube",dauUS:"157.5M",mauUS:"254M",pctPop:46,color:"#FF0000"},
+{name:"Facebook",dauUS:"143.6M",mauUS:"210M",pctPop:42,color:"#1877F2"},
+{name:"Instagram",dauUS:"94.4M",mauUS:"172M",pctPop:28,color:"#E4405F"},
+{name:"TikTok",dauUS:"81.5M",mauUS:"136M",pctPop:24,color:"#69C9D0"},
+{name:"Snapchat",dauUS:"53.0M",mauUS:"106M",pctPop:16,color:"#FFFC00"},
+{name:"Reddit",dauUS:"51.6M",mauUS:"94M",pctPop:15,color:"#FF4500"},
+{name:"X (Twitter)",dauUS:"46.8M",mauUS:"104M",pctPop:14,color:"#1DA1F2"},
+{name:"Pinterest",dauUS:"~31M",mauUS:"98M",pctPop:9,color:"#BD081C"},
+];
+
+const CENSUS_REGIONS={
   Northeast:["CT","ME","MA","NH","RI","VT","NJ","NY","PA"],
   Midwest:["IL","IN","IA","KS","MI","MN","MO","NE","ND","OH","SD","WI"],
   South:["AL","AR","DE","DC","FL","GA","KY","LA","MD","MS","NC","OK","SC","TN","TX","VA","WV"],
   West:["AK","AZ","CA","CO","HI","ID","MT","NV","NM","OR","UT","WA","WY"],
 };
 
-const US_TOPO_URL = "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json";
-
-// ══════════════════════════════════════════════════════════════
-// UTILITIES
-// ══════════════════════════════════════════════════════════════
-const fmt = n => n != null ? n.toLocaleString('en-US') : '—';
-const fmtPct = (n,d=1) => n != null ? n.toFixed(d)+'%' : '—';
-const fmtCompact = n => { if(n>=1e9)return(n/1e9).toFixed(1)+'B'; if(n>=1e6)return(n/1e6).toFixed(1)+'M'; if(n>=1e3)return(n/1e3).toFixed(1)+'K'; return n!=null?n.toString():'—'; };
-
-// Haversine distance in miles
-function haversine(lat1,lon1,lat2,lon2){
-  const R=3959,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180;
-  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
-  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-}
-
-// State centroids (lat, lon) for radial selection
-const STATE_CENTROIDS = {
-  AL:[32.806671,-86.79113],AK:[61.370716,-152.404419],AZ:[33.729759,-111.431221],AR:[34.969704,-92.373123],
-  CA:[36.116203,-119.681564],CO:[39.059811,-105.311104],CT:[41.597782,-72.755371],DE:[39.318523,-75.507141],
-  DC:[38.897438,-77.026817],FL:[27.766279,-81.686783],GA:[33.040619,-83.643074],HI:[21.094318,-157.498337],
-  ID:[44.240459,-114.478828],IL:[40.349457,-88.986137],IN:[39.849426,-86.258278],IA:[42.011539,-93.210526],
-  KS:[38.526600,-96.726486],KY:[37.668140,-84.670067],LA:[31.169546,-91.867805],ME:[44.693947,-69.381927],
-  MD:[39.063946,-76.802101],MA:[42.230171,-71.530106],MI:[43.326618,-84.536095],MN:[45.694454,-93.900192],
-  MS:[32.741646,-89.678696],MO:[38.456085,-92.288368],MT:[46.921925,-110.454353],NE:[41.125370,-98.268082],
-  NV:[38.313515,-117.055374],NH:[43.452492,-71.563896],NJ:[40.298904,-74.521011],NM:[34.840515,-106.248482],
-  NY:[42.165726,-74.948051],NC:[35.630066,-79.806419],ND:[47.528912,-99.784012],OH:[40.388783,-82.764915],
-  OK:[35.565342,-96.928917],OR:[44.572021,-122.070938],PA:[40.590752,-77.209755],RI:[41.680893,-71.511780],
-  SC:[33.856892,-80.945007],SD:[44.299782,-99.438828],TN:[35.747845,-86.692345],TX:[31.054487,-97.563461],
-  UT:[40.150032,-111.862434],VT:[44.045876,-72.710686],VA:[37.769337,-78.169968],WA:[47.400902,-121.490494],
-  WV:[38.491226,-80.954453],WI:[44.268543,-89.616508],WY:[42.755966,-107.302490],
+const STATE_CENTROIDS={
+AL:[32.81,-86.79],AK:[61.37,-152.40],AZ:[33.73,-111.43],AR:[34.97,-92.37],CA:[36.12,-119.68],CO:[39.06,-105.31],CT:[41.60,-72.76],DE:[39.32,-75.51],DC:[38.90,-77.03],FL:[27.77,-81.69],GA:[33.04,-83.64],HI:[21.09,-157.50],ID:[44.24,-114.48],IL:[40.35,-88.99],IN:[39.85,-86.26],IA:[42.01,-93.21],KS:[38.53,-96.73],KY:[37.67,-84.67],LA:[31.17,-91.87],ME:[44.69,-69.38],MD:[39.06,-76.80],MA:[42.23,-71.53],MI:[43.33,-84.54],MN:[45.69,-93.90],MS:[32.74,-89.68],MO:[38.46,-92.29],MT:[46.92,-110.45],NE:[41.13,-98.27],NV:[38.31,-117.06],NH:[43.45,-71.56],NJ:[40.30,-74.52],NM:[34.84,-106.25],NY:[42.17,-74.95],NC:[35.63,-79.81],ND:[47.53,-99.78],OH:[40.39,-82.76],OK:[35.57,-96.93],OR:[44.57,-122.07],PA:[40.59,-77.21],RI:[41.68,-71.51],SC:[33.86,-80.95],SD:[44.30,-99.44],TN:[35.75,-86.69],TX:[31.05,-97.56],UT:[40.15,-111.86],VT:[44.05,-72.71],VA:[37.77,-78.17],WA:[47.40,-121.49],WV:[38.49,-80.95],WI:[44.27,-89.62],WY:[42.76,-107.30]
 };
 
-// ══════════════════════════════════════════════════════════════
-// SUBCOMPONENTS
-// ══════════════════════════════════════════════════════════════
-function FilterSection({title,children}){
-  return <div><div style={{fontSize:11,fontWeight:600,color:'var(--text-secondary)',letterSpacing:0.6,textTransform:'uppercase',marginBottom:8}}>{title}</div>{children}</div>;
+const US_TOPO_URL="https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json";
+const US_POP=341784857;
+
+// ════════════════════════════════════════════════════════════
+// UTILITIES
+// ════════════════════════════════════════════════════════════
+const fmt=n=>n!=null?n.toLocaleString('en-US'):'—';
+const fmtPct=(n,d=1)=>n!=null?n.toFixed(d)+'%':'—';
+const fmtCompact=n=>{if(n>=1e9)return(n/1e9).toFixed(1)+'B';if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1e3)return(n/1e3).toFixed(1)+'K';return n!=null?String(n):'—';};
+function haversine(lat1,lon1,lat2,lon2){const R=3959,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180;const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));}
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+// ════════════════════════════════════════════════════════════
+// APP STATE (simple reactive store)
+// ════════════════════════════════════════════════════════════
+const state = {
+  selectedStates: new Set(),
+  selectedRegion: null,
+  selectedDMAs: new Set(),
+  hoveredState: null,
+  popMin: 0, popMax: 50000000,
+  medAgeMin: 25, medAgeMax: 55,
+  urbanMin: 0,
+  growthFilter: "all",
+  dmaRankMax: 50,
+  selectedPlatforms: new Set(PLATFORM_DATA.map(p=>p.name)),
+  activeTab: "geo",
+  mapView: "population",
+  sidebarCollapsed: false,
+  selectionMode: "state",
+  radialCenter: null, radialRadius: 0,
+  topoData: null, projection: null, pathGen: null,
+  mapReady: false,
+};
+
+let listeners = [];
+function subscribe(fn){ listeners.push(fn); }
+function notify(){ listeners.forEach(fn=>fn()); }
+function update(patch){ Object.assign(state,patch); notify(); }
+
+// Derived
+function getFilteredStates(){
+  return STATE_DATA.filter(s=>{
+    const g=((s.pop2025-s.pop2020)/s.pop2020)*100;
+    if(s.pop2025<state.popMin||s.pop2025>state.popMax)return false;
+    if(s.medAge<state.medAgeMin||s.medAge>state.medAgeMax)return false;
+    if(s.urban<state.urbanMin)return false;
+    if(state.growthFilter==="growing"&&g<=0)return false;
+    if(state.growthFilter==="declining"&&g>0)return false;
+    return true;
+  });
 }
-function RangeSlider({label,value,min,max,step,onChange,format}){
-  return <div style={{marginBottom:8}}>
-    <div style={{display:'flex',justifyContent:'space-between',marginBottom:5}}>
-      <span style={{fontSize:11,color:'var(--text-tertiary)'}}>{label}</span>
-      <span style={{fontSize:11,color:'var(--text-primary)',fontFamily:'"IBM Plex Mono",monospace',fontWeight:500}}>{format(value)}</span>
-    </div>
-    <input type="range" min={min} max={max} step={step} value={value} onChange={e=>onChange(Number(e.target.value))}/>
-  </div>;
-}
-function MetricCard({label,value,color}){
-  return <div style={{background:'var(--bg-card)',borderRadius:8,padding:'12px 14px',border:'1px solid var(--border-subtle)'}}>
-    <div style={{fontSize:10,color:'var(--text-tertiary)',letterSpacing:0.5,marginBottom:5,textTransform:'uppercase',fontWeight:600}}>{label}</div>
-    <div style={{fontSize:20,fontWeight:700,color,fontFamily:'"IBM Plex Mono",monospace',letterSpacing:-0.5}}>{value}</div>
-  </div>;
-}
-function EmptyState({message}){
-  return <div style={{display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',height:280,textAlign:'center',padding:24}}>
-    <div style={{width:56,height:56,borderRadius:16,background:'var(--bg-tertiary)',border:'1px solid var(--border-subtle)',display:'flex',alignItems:'center',justifyContent:'center',marginBottom:16,fontSize:24}}>🎯</div>
-    <div style={{fontSize:13,color:'var(--text-tertiary)',maxWidth:260,lineHeight:1.7}}>{message}</div>
-  </div>;
+function getFilteredAbbrs(){ return new Set(getFilteredStates().map(s=>s.abbr)); }
+function getSummary(){
+  const sel=STATE_DATA.filter(s=>state.selectedStates.has(s.abbr));
+  if(!sel.length)return null;
+  const tp=sel.reduce((a,s)=>a+s.pop2025,0),tp20=sel.reduce((a,s)=>a+s.pop2020,0);
+  const tb=sel.reduce((a,s)=>a+s.births,0),td=sel.reduce((a,s)=>a+s.deaths,0);
+  const tim=sel.reduce((a,s)=>a+s.intlMig,0),tdm=sel.reduce((a,s)=>a+s.domMig,0);
+  return {states:sel,totalPop:tp,totalPop2020:tp20,totalBirths:tb,totalDeaths:td,totalIntlMig:tim,totalDomMig:tdm,
+    avgAge:sel.reduce((a,s)=>a+s.medAge*s.pop2025,0)/tp,
+    avgUrban:sel.reduce((a,s)=>a+s.urban*s.pop2025,0)/tp,
+    growthPct:((tp-tp20)/tp20)*100,
+    usPct:(tp/US_POP)*100,
+    avgWhite:sel.reduce((a,s)=>a+s.white*s.pop2025,0)/tp,
+    avgBlack:sel.reduce((a,s)=>a+s.black*s.pop2025,0)/tp,
+    avgHisp:sel.reduce((a,s)=>a+s.hisp*s.pop2025,0)/tp,
+  };
 }
 
-// ══════════════════════════════════════════════════════════════
-// MAP COMPONENT (D3 + TopoJSON)
-// ══════════════════════════════════════════════════════════════
-function USMap({ selectedStates, filteredAbbrs, onToggleState, onHoverState, hoveredState, mapView,
-  selectedDMAs, onToggleDMA, dmaRankMax, selectionMode, radialCenter, radialRadius, onRadialChange }) {
-  const svgRef = useRef(null);
-  const [topoData, setTopoData] = useState(null);
-  const [projection, setProjection] = useState(null);
-  const [pathGen, setPathGen] = useState(null);
-  const [dragging, setDragging] = useState(false);
+// ════════════════════════════════════════════════════════════
+// MAP (vanilla D3 + TopoJSON, no React/Babel)
+// ════════════════════════════════════════════════════════════
+function initMap(){
+  const container=document.getElementById('map-container');
+  if(!container)return;
+  container.innerHTML='<div class="map-loading"><div class="spinner"></div>Loading map…</div>';
 
-  // Load TopoJSON
-  useEffect(() => {
-    fetch(US_TOPO_URL).then(r => r.json()).then(data => setTopoData(data)).catch(() => {});
-  }, []);
+  // Load D3 + TopoJSON from CDN
+  function loadScript(url){return new Promise((res,rej)=>{const s=document.createElement('script');s.src=url;s.onload=res;s.onerror=rej;document.head.appendChild(s);});}
 
-  // Set up projection
-  useEffect(() => {
-    if (!svgRef.current) return;
-    const w = 960, h = 600;
-    const proj = d3.geoAlbersUsa().scale(1200).translate([w/2, h/2]);
-    const path = d3.geoPath().projection(proj);
-    setProjection(() => proj);
-    setPathGen(() => path);
-  }, [topoData]);
+  Promise.all([
+    typeof d3==='undefined'?loadScript('https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js'):Promise.resolve(),
+    typeof topojson==='undefined'?loadScript('https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js'):Promise.resolve(),
+  ]).then(()=>{
+    return fetch(US_TOPO_URL).then(r=>{if(!r.ok)throw new Error('Failed to load map');return r.json();});
+  }).then(topo=>{
+    const W=960,H=600;
+    const proj=d3.geoAlbersUsa().scale(1200).translate([W/2,H/2]);
+    const path=d3.geoPath().projection(proj);
+    state.topoData=topo;state.projection=proj;state.pathGen=path;state.mapReady=true;
+    renderMap();
+  }).catch(err=>{
+    console.error('Map load error:',err);
+    container.innerHTML='<div class="map-loading" style="flex-direction:column;gap:10px;"><span style="font-size:20px;">⚠️</span><span>Unable to load map data. Check your connection and refresh.</span></div>';
+  });
+}
 
-  const features = useMemo(() => {
-    if (!topoData) return [];
-    return topojson.feature(topoData, topoData.objects.states).features;
-  }, [topoData]);
+function getStateColor(abbr,isSelected,isHovered,isFiltered){
+  if(!isFiltered)return '#0a0e14';
+  const s=ABBR_TO_STATE[abbr];
+  let t;
+  switch(state.mapView){
+    case"population":t=Math.min(1,s.pop2025/40000000);break;
+    case"growth":t=Math.min(1,Math.max(0,(((s.pop2025-s.pop2020)/s.pop2020)*100+2)/13));break;
+    case"age":t=(s.medAge-30)/15;break;
+    case"urban":t=s.urban/100;break;
+    default:t=0.5;
+  }
+  if(isSelected){
+    const r=Math.round(16+t*80),g=Math.round(160+t*50),b=Math.round(130+t*60);
+    return isHovered?`rgb(${r+20},${Math.min(255,g+20)},${b+15})`:`rgb(${r},${g},${b})`;
+  }
+  const base=Math.round(14+t*35),acc=Math.round(24+t*55);
+  return isHovered?`rgb(${base+12},${acc+12},${base+20})`:`rgb(${base},${acc},${base+8})`;
+}
 
-  const getColor = useCallback((fipsId) => {
-    const fipsStr = String(fipsId).padStart(2,'0');
-    const abbr = FIPS_TO_ABBR[fipsStr];
-    const s = ABBR_TO_STATE[abbr];
-    if (!s) return '#0a0e16';
-    if (!filteredAbbrs.has(abbr)) return '#0d1118';
-    const isSelected = selectedStates.has(abbr);
-    const isHovered = hoveredState === abbr;
-    let t;
-    switch(mapView){
-      case "population": t=Math.min(1,s.pop2025/40000000); break;
-      case "growth": t=Math.min(1,Math.max(0,(((s.pop2025-s.pop2020)/s.pop2020)*100+2)/13)); break;
-      case "age": t=(s.medAge-30)/15; break;
-      case "urban": t=s.urban/100; break;
-      default: t=0.5;
+function renderMap(){
+  const container=document.getElementById('map-container');
+  if(!container||!state.mapReady)return;
+  const {topoData,projection:proj,pathGen:path}=state;
+  const features=topojson.feature(topoData,topoData.objects.states).features;
+  const filteredAbbrs=getFilteredAbbrs();
+  const W=960,H=600;
+
+  // Build SVG string
+  let svg=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" style="width:100%;height:100%;display:block;cursor:${state.selectionMode==='radial'?'crosshair':'default'}">`;
+  svg+=`<rect width="${W}" height="${H}" fill="var(--bg-0)"/>`;
+
+  // State paths
+  features.forEach(f=>{
+    const fipsStr=String(f.id).padStart(2,'0');
+    const abbr=FIPS_TO_ABBR[fipsStr];
+    if(!abbr)return;
+    const isFiltered=filteredAbbrs.has(abbr);
+    const isSelected=state.selectedStates.has(abbr);
+    const isHovered=state.hoveredState===abbr;
+    const fill=getStateColor(abbr,isSelected,isHovered,isFiltered);
+    const stroke=isSelected?'var(--blue)':isFiltered?'#1a2436':'#0f1520';
+    const sw=isSelected?1.8:0.5;
+    const cursor=isFiltered&&state.selectionMode==='state'?'pointer':'default';
+    svg+=`<path d="${path(f)}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" style="cursor:${cursor};transition:fill .12s" data-abbr="${abbr}" data-filtered="${isFiltered?1:0}"/>`;
+  });
+
+  // State borders
+  const mesh=topojson.mesh(topoData,topoData.objects.states,(a,b)=>a!==b);
+  svg+=`<path d="${path(mesh)}" fill="none" stroke="#141e30" stroke-width="0.4" style="pointer-events:none"/>`;
+
+  // Radial circle
+  if(state.radialCenter&&state.radialRadius>0){
+    const cp=proj([state.radialCenter[1],state.radialCenter[0]]);
+    if(cp){
+      const mpdl=69*Math.cos(state.radialCenter[0]*Math.PI/180);
+      const degOff=state.radialRadius/mpdl;
+      const ep=proj([state.radialCenter[1]+degOff,state.radialCenter[0]]);
+      if(ep){
+        const pxR=Math.abs(ep[0]-cp[0]);
+        svg+=`<circle cx="${cp[0]}" cy="${cp[1]}" r="${pxR}" fill="rgba(91,156,246,0.07)" stroke="var(--blue)" stroke-width="1.5" stroke-dasharray="6,3" style="pointer-events:none"/>`;
+        svg+=`<circle cx="${cp[0]}" cy="${cp[1]}" r="4" fill="var(--blue)" style="pointer-events:none"/>`;
+        svg+=`<text x="${cp[0]}" y="${cp[1]-pxR-7}" text-anchor="middle" style="font-size:11px;fill:var(--text-0);font-family:var(--mono);font-weight:600;pointer-events:none">${state.radialRadius} mi</text>`;
+      }
     }
-    if(isSelected){
-      const r=Math.round(20+t*100),g=Math.round(180+t*40),b=Math.round(140+t*60);
-      return isHovered?`rgb(${r+25},${Math.min(255,g+25)},${b+15})`:`rgb(${r},${g},${b})`;
-    }
-    const base=Math.round(18+t*40),acc=Math.round(28+t*60);
-    return isHovered?`rgb(${base+15},${acc+15},${base+25})`:`rgb(${base},${acc},${base+12})`;
-  }, [filteredAbbrs, selectedStates, hoveredState, mapView]);
-
-  // Handle mouse for radial selection
-  const handleMapMouseDown = useCallback((e) => {
-    if (selectionMode !== 'radial' || !projection) return;
-    const svg = svgRef.current;
-    const rect = svg.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width * 960;
-    const y = (e.clientY - rect.top) / rect.height * 600;
-    const coords = projection.invert([x, y]);
-    if (coords) {
-      onRadialChange({ center: [coords[1], coords[0]], radius: 0 });
-      setDragging(true);
-    }
-  }, [selectionMode, projection, onRadialChange]);
-
-  const handleMapMouseMove = useCallback((e) => {
-    if (!dragging || !radialCenter || !projection) return;
-    const svg = svgRef.current;
-    const rect = svg.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width * 960;
-    const y = (e.clientY - rect.top) / rect.height * 600;
-    const coords = projection.invert([x, y]);
-    if (coords) {
-      const dist = haversine(radialCenter[0], radialCenter[1], coords[1], coords[0]);
-      onRadialChange({ center: radialCenter, radius: Math.round(dist) });
-    }
-  }, [dragging, radialCenter, projection, onRadialChange]);
-
-  const handleMapMouseUp = useCallback(() => { setDragging(false); }, []);
-
-  // Project DMA positions
-  const dmaDots = useMemo(() => {
-    if (!projection) return [];
-    return DMA_DATA.filter(d => d.rank <= dmaRankMax).map(d => {
-      const pos = projection([d.lon, d.lat]);
-      return pos ? { ...d, x: pos[0], y: pos[1] } : null;
-    }).filter(Boolean);
-  }, [projection, dmaRankMax]);
-
-  // Radial circle projection
-  const radialCircle = useMemo(() => {
-    if (!projection || !radialCenter || !radialRadius) return null;
-    const centerPos = projection([radialCenter[1], radialCenter[0]]);
-    if (!centerPos) return null;
-    // Approximate: project a point `radius` miles east to get pixel radius
-    const milesPerDegLon = 69 * Math.cos(radialCenter[0] * Math.PI / 180);
-    const degOffset = radialRadius / milesPerDegLon;
-    const edgePos = projection([radialCenter[1] + degOffset, radialCenter[0]]);
-    if (!edgePos) return null;
-    const pxRadius = Math.abs(edgePos[0] - centerPos[0]);
-    return { cx: centerPos[0], cy: centerPos[1], r: pxRadius };
-  }, [projection, radialCenter, radialRadius]);
-
-  if (!topoData || !pathGen) {
-    return <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:'100%',color:'var(--text-tertiary)',fontSize:13}}>Loading map data...</div>;
   }
 
-  return (
-    <svg ref={svgRef} viewBox="0 0 960 600" style={{width:'100%',height:'100%',cursor:selectionMode==='radial'?'crosshair':'default'}}
-      preserveAspectRatio="xMidYMid meet"
-      onMouseDown={handleMapMouseDown} onMouseMove={handleMapMouseMove} onMouseUp={handleMapMouseUp} onMouseLeave={handleMapMouseUp}>
-      {/* BG */}
-      <rect width="960" height="600" fill="var(--bg-primary)"/>
+  // DMA dots
+  DMA_DATA.filter(d=>d.rank<=state.dmaRankMax).forEach(d=>{
+    const pos=proj([d.lon,d.lat]);
+    if(!pos)return;
+    const isSel=state.selectedDMAs.has(d.rank);
+    const r=Math.max(4,Math.sqrt(d.tvHH/400000)*3);
+    svg+=`<circle cx="${pos[0]}" cy="${pos[1]}" r="${r+3}" fill="transparent" data-dma="${d.rank}" style="cursor:${state.selectionMode==='metro'?'pointer':'default'}"/>`;
+    svg+=`<circle cx="${pos[0]}" cy="${pos[1]}" r="${r}" fill="${isSel?'var(--yellow)':'rgba(240,185,64,0.18)'}" stroke="${isSel?'var(--yellow)':'rgba(240,185,64,0.35)'}" stroke-width="${isSel?1.5:0.8}" style="transition:all .12s;pointer-events:none"/>`;
+    if(isSel){
+      svg+=`<text x="${pos[0]}" y="${pos[1]-r-5}" text-anchor="middle" style="font-size:8px;fill:var(--yellow);font-family:var(--sans);font-weight:700;pointer-events:none">${esc(d.market)}</text>`;
+    }
+  });
 
-      {/* States */}
-      {features.map(f => {
-        const fipsStr = String(f.id).padStart(2,'0');
-        const abbr = FIPS_TO_ABBR[fipsStr];
-        const isFiltered = abbr && filteredAbbrs.has(abbr);
-        const isSelected = abbr && selectedStates.has(abbr);
-        return <path key={f.id} d={pathGen(f)} fill={getColor(f.id)}
-          stroke={isSelected ? 'var(--accent-blue)' : isFiltered ? '#1e2a42' : '#111827'}
-          strokeWidth={isSelected ? 1.8 : 0.5}
-          style={{cursor:isFiltered&&selectionMode==='state'?'pointer':'default',transition:'fill 0.15s'}}
-          onClick={(e) => { if(selectionMode==='state'&&isFiltered){e.stopPropagation();onToggleState(abbr);} }}
-          onMouseEnter={() => abbr && onHoverState(abbr)}
-          onMouseLeave={() => onHoverState(null)}
-        />;
-      })}
+  svg+='</svg>';
+  container.innerHTML=svg;
 
-      {/* State outlines (borders only) */}
-      {topoData.objects.states && (
-        <path d={pathGen(topojson.mesh(topoData, topoData.objects.states, (a,b)=>a!==b))}
-          fill="none" stroke="#1a2540" strokeWidth="0.4" style={{pointerEvents:'none'}}/>
-      )}
+  // Attach event listeners
+  const svgEl=container.querySelector('svg');
+  if(!svgEl)return;
 
-      {/* Radial selection circle */}
-      {radialCircle && (
-        <g style={{pointerEvents:'none'}}>
-          <circle cx={radialCircle.cx} cy={radialCircle.cy} r={radialCircle.r}
-            fill="rgba(96,165,250,0.08)" stroke="var(--accent-blue)" strokeWidth="1.5" strokeDasharray="6,3"/>
-          <circle cx={radialCircle.cx} cy={radialCircle.cy} r={4} fill="var(--accent-blue)"/>
-          {radialRadius > 0 && <text x={radialCircle.cx} y={radialCircle.cy - radialCircle.r - 8}
-            textAnchor="middle" style={{fontSize:11,fill:'var(--text-primary)',fontFamily:'"IBM Plex Mono",monospace',fontWeight:600}}>
-            {radialRadius} mi
-          </text>}
-        </g>
-      )}
+  svgEl.addEventListener('click',function(e){
+    const stPath=e.target.closest('[data-abbr]');
+    if(stPath&&stPath.dataset.filtered==='1'&&state.selectionMode==='state'){
+      const abbr=stPath.dataset.abbr;
+      const sel=new Set(state.selectedStates);
+      if(sel.has(abbr))sel.delete(abbr);else sel.add(abbr);
+      update({selectedStates:sel,selectedRegion:null});
+      return;
+    }
+    const dmaEl=e.target.closest('[data-dma]');
+    if(dmaEl&&state.selectionMode==='metro'){
+      const rank=parseInt(dmaEl.dataset.dma);
+      const sel=new Set(state.selectedDMAs);
+      if(sel.has(rank))sel.delete(rank);else sel.add(rank);
+      update({selectedDMAs:sel});
+      return;
+    }
+  });
 
-      {/* DMA dots */}
-      {dmaDots.map(d => {
-        const isSel = selectedDMAs.has(d.rank);
-        const r = Math.max(4, Math.sqrt(d.tvHH / 400000) * 3);
-        return <g key={'dma'+d.rank} style={{cursor:selectionMode==='metro'?'pointer':'default'}}
-          onClick={(e) => { if(selectionMode==='metro'){e.stopPropagation();onToggleDMA(d.rank);} }}>
-          <circle cx={d.x} cy={d.y} r={r+2} fill="transparent"/>
-          <circle cx={d.x} cy={d.y} r={r}
-            fill={isSel ? 'var(--accent-yellow)' : 'rgba(251,191,36,0.2)'}
-            stroke={isSel ? 'var(--accent-yellow)' : 'rgba(251,191,36,0.4)'}
-            strokeWidth={isSel ? 1.5 : 0.8}
-            style={{transition:'all 0.15s'}}/>
-          {isSel && <text x={d.x} y={d.y - r - 5} textAnchor="middle"
-            style={{fontSize:8,fill:'var(--accent-yellow)',fontFamily:'"Instrument Sans",sans-serif',fontWeight:600}}>
-            {d.market}
-          </text>}
-        </g>;
-      })}
-    </svg>
-  );
+  svgEl.addEventListener('mousemove',function(e){
+    const stPath=e.target.closest('[data-abbr]');
+    const abbr=stPath?stPath.dataset.abbr:null;
+    if(abbr!==state.hoveredState){
+      state.hoveredState=abbr;
+      renderTooltip();
+      // Lightweight re-render of just hover colors
+      container.querySelectorAll('[data-abbr]').forEach(p=>{
+        const a=p.dataset.abbr;
+        const isFilt=getFilteredAbbrs().has(a);
+        p.setAttribute('fill',getStateColor(a,state.selectedStates.has(a),state.hoveredState===a,isFilt));
+      });
+    }
+  });
+
+  svgEl.addEventListener('mouseleave',function(){
+    state.hoveredState=null;renderTooltip();
+    container.querySelectorAll('[data-abbr]').forEach(p=>{
+      const a=p.dataset.abbr;
+      const isFilt=getFilteredAbbrs().has(a);
+      p.setAttribute('fill',getStateColor(a,state.selectedStates.has(a),false,isFilt));
+    });
+  });
+
+  // Radial drag
+  let dragging=false;
+  svgEl.addEventListener('mousedown',function(e){
+    if(state.selectionMode!=='radial'||!state.projection)return;
+    const rect=svgEl.getBoundingClientRect();
+    const x=(e.clientX-rect.left)/rect.width*960;
+    const y=(e.clientY-rect.top)/rect.height*600;
+    const coords=state.projection.invert([x,y]);
+    if(coords){
+      state.radialCenter=[coords[1],coords[0]];state.radialRadius=0;
+      dragging=true;
+    }
+  });
+  svgEl.addEventListener('mousemove',function(e){
+    if(!dragging||!state.radialCenter)return;
+    const rect=svgEl.getBoundingClientRect();
+    const x=(e.clientX-rect.left)/rect.width*960;
+    const y=(e.clientY-rect.top)/rect.height*600;
+    const coords=state.projection.invert([x,y]);
+    if(coords){
+      const dist=haversine(state.radialCenter[0],state.radialCenter[1],coords[1],coords[0]);
+      state.radialRadius=Math.round(dist);
+      // Auto-select states in radius
+      const filtAbbrs=getFilteredAbbrs();
+      const inRange=new Set();
+      STATE_DATA.forEach(s=>{
+        const c=STATE_CENTROIDS[s.abbr];
+        if(c&&filtAbbrs.has(s.abbr)&&haversine(state.radialCenter[0],state.radialCenter[1],c[0],c[1])<=state.radialRadius)inRange.add(s.abbr);
+      });
+      const dmasIn=new Set();
+      DMA_DATA.forEach(d=>{if(haversine(state.radialCenter[0],state.radialCenter[1],d.lat,d.lon)<=state.radialRadius)dmasIn.add(d.rank);});
+      update({selectedStates:inRange,selectedDMAs:dmasIn,selectedRegion:null});
+    }
+  });
+  function endDrag(){dragging=false;}
+  svgEl.addEventListener('mouseup',endDrag);
+  svgEl.addEventListener('mouseleave',endDrag);
 }
 
-// ══════════════════════════════════════════════════════════════
-// MAIN APP
-// ══════════════════════════════════════════════════════════════
-function App() {
-  const [selectedStates, setSelectedStates] = useState(new Set());
-  const [selectedRegion, setSelectedRegion] = useState(null);
-  const [selectedDMAs, setSelectedDMAs] = useState(new Set());
-  const [hoveredState, setHoveredState] = useState(null);
-  const [popMin, setPopMin] = useState(0);
-  const [popMax, setPopMax] = useState(50000000);
-  const [medAgeMin, setMedAgeMin] = useState(25);
-  const [medAgeMax, setMedAgeMax] = useState(55);
-  const [urbanMin, setUrbanMin] = useState(0);
-  const [growthFilter, setGrowthFilter] = useState("all");
-  const [dmaRankMax, setDmaRankMax] = useState(50);
-  const [selectedPlatforms, setSelectedPlatforms] = useState(new Set(PLATFORM_DATA.map(p=>p.name)));
-  const [activeTab, setActiveTab] = useState("geo");
-  const [mapView, setMapView] = useState("population");
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  // Selection mode: 'state', 'metro', 'radial'
-  const [selectionMode, setSelectionMode] = useState('state');
-  const [radialCenter, setRadialCenter] = useState(null);
-  const [radialRadius, setRadialRadius] = useState(0);
+function renderTooltip(){
+  const el=document.getElementById('map-tooltip');
+  if(!el)return;
+  const abbr=state.hoveredState;
+  if(!abbr){el.style.display='none';return;}
+  const s=ABBR_TO_STATE[abbr];
+  if(!s){el.style.display='none';return;}
+  const g=((s.pop2025-s.pop2020)/s.pop2020*100);
+  const gc=g>0?'var(--green)':'var(--red)';
+  el.style.display='block';
+  el.innerHTML=`<h4>${esc(s.name)}</h4><div class="tooltip-grid">
+    <span class="tooltip-label">Population</span><span class="tooltip-val" style="color:var(--text-0)">${fmt(s.pop2025)}</span>
+    <span class="tooltip-label">Growth</span><span class="tooltip-val" style="color:${gc};font-weight:600">${g>0?'+':''}${g.toFixed(1)}%</span>
+    <span class="tooltip-label">Med. Age</span><span class="tooltip-val" style="color:var(--text-0)">${s.medAge}</span>
+    <span class="tooltip-label">Urban</span><span class="tooltip-val" style="color:var(--text-0)">${s.urban}%</span>
+  </div>`;
+}
 
-  const filteredStates = useMemo(() => {
-    return STATE_DATA.filter(s => {
-      const g = ((s.pop2025-s.pop2020)/s.pop2020)*100;
-      if(s.pop2025<popMin||s.pop2025>popMax) return false;
-      if(s.medAge<medAgeMin||s.medAge>medAgeMax) return false;
-      if(s.urban<urbanMin) return false;
-      if(growthFilter==="growing"&&g<=0) return false;
-      if(growthFilter==="declining"&&g>0) return false;
-      return true;
+// ════════════════════════════════════════════════════════════
+// PANEL RENDERING
+// ════════════════════════════════════════════════════════════
+function renderPanel(){
+  const panel=document.getElementById('panel-body');
+  if(!panel)return;
+  const tab=state.activeTab;
+  const summary=getSummary();
+
+  if(tab==='geo') panel.innerHTML=renderGeoTab(summary);
+  else if(tab==='dma') panel.innerHTML=renderDMATab(summary);
+  else if(tab==='platforms') panel.innerHTML=renderPlatformsTab(summary);
+  else if(tab==='summary') panel.innerHTML=renderBriefTab(summary);
+
+  // Attach DMA click handlers
+  if(tab==='dma'){
+    panel.querySelectorAll('[data-dma-click]').forEach(el=>{
+      el.addEventListener('click',()=>{
+        const rank=parseInt(el.dataset.dmaClick);
+        const sel=new Set(state.selectedDMAs);
+        if(sel.has(rank))sel.delete(rank);else sel.add(rank);
+        update({selectedDMAs:sel});
+      });
     });
-  }, [popMin,popMax,medAgeMin,medAgeMax,urbanMin,growthFilter]);
-  const filteredAbbrs = useMemo(() => new Set(filteredStates.map(s=>s.abbr)), [filteredStates]);
+  }
+}
 
-  const handleRegionSelect = useCallback((region) => {
-    if(selectedRegion===region){setSelectedRegion(null);setSelectedStates(new Set());}
-    else{setSelectedRegion(region);setSelectedStates(new Set((CENSUS_REGIONS[region]||[]).filter(a=>filteredAbbrs.has(a))));}
-  }, [selectedRegion,filteredAbbrs]);
-
-  const toggleState = useCallback((abbr) => {
-    setSelectedRegion(null);
-    setSelectedStates(prev=>{const n=new Set(prev);if(n.has(abbr))n.delete(abbr);else n.add(abbr);return n;});
-  }, []);
-  const toggleDMA = useCallback((rank) => {
-    setSelectedDMAs(prev=>{const n=new Set(prev);if(n.has(rank))n.delete(rank);else n.add(rank);return n;});
-  }, []);
-
-  // Radial selection: auto-select states whose centroid falls within radius
-  const handleRadialChange = useCallback(({center, radius}) => {
-    setRadialCenter(center);
-    setRadialRadius(radius);
-    if (radius > 0 && center) {
-      const inRange = new Set();
-      STATE_DATA.forEach(s => {
-        const c = STATE_CENTROIDS[s.abbr];
-        if (c && filteredAbbrs.has(s.abbr)) {
-          const dist = haversine(center[0], center[1], c[0], c[1]);
-          if (dist <= radius) inRange.add(s.abbr);
-        }
-      });
-      setSelectedStates(inRange);
-      setSelectedRegion(null);
-      // Also select DMAs within radius
-      const dmasInRange = new Set();
-      DMA_DATA.forEach(d => {
-        const dist = haversine(center[0], center[1], d.lat, d.lon);
-        if (dist <= radius) dmasInRange.add(d.rank);
-      });
-      setSelectedDMAs(dmasInRange);
-    }
-  }, [filteredAbbrs]);
-
-  const selectAllFiltered = () => setSelectedStates(new Set(filteredStates.map(s=>s.abbr)));
-  const clearSelection = () => { setSelectedStates(new Set());setSelectedRegion(null);setSelectedDMAs(new Set());setRadialCenter(null);setRadialRadius(0); };
-
-  const summary = useMemo(() => {
-    const sel = STATE_DATA.filter(s=>selectedStates.has(s.abbr));
-    if(!sel.length) return null;
-    const tp=sel.reduce((a,s)=>a+s.pop2025,0), tp20=sel.reduce((a,s)=>a+s.pop2020,0);
-    const tb=sel.reduce((a,s)=>a+s.births,0), td=sel.reduce((a,s)=>a+s.deaths,0);
-    const tim=sel.reduce((a,s)=>a+s.intlMig,0), tdm=sel.reduce((a,s)=>a+s.domMig,0);
-    return {states:sel,totalPop:tp,totalPop2020:tp20,totalBirths:tb,totalDeaths:td,totalIntlMig:tim,totalDomMig:tdm,
-      avgAge:sel.reduce((a,s)=>a+s.medAge*s.pop2025,0)/tp,
-      avgUrban:sel.reduce((a,s)=>a+s.urban*s.pop2025,0)/tp,
-      growthPct:((tp-tp20)/tp20)*100,
-      usPct:(tp/341784857)*100,
-      avgWhite:sel.reduce((a,s)=>a+s.white*s.pop2025,0)/tp,
-      avgBlack:sel.reduce((a,s)=>a+s.black*s.pop2025,0)/tp,
-      avgHisp:sel.reduce((a,s)=>a+s.hisp*s.pop2025,0)/tp,
-    };
-  }, [selectedStates]);
-
-  // Hover tooltip
-  const hoveredData = hoveredState ? ABBR_TO_STATE[hoveredState] : null;
-  const hoveredGrowth = hoveredData ? ((hoveredData.pop2025-hoveredData.pop2020)/hoveredData.pop2020*100) : 0;
-
-  return (
-    <div style={{width:'100%',height:'100vh',display:'flex',fontFamily:'"Instrument Sans",sans-serif',background:'var(--bg-primary)',color:'var(--text-primary)',overflow:'hidden'}}>
-
-      {/* ═══ LEFT PANEL ═══ */}
-      <div style={{width:sidebarCollapsed?48:310,minWidth:sidebarCollapsed?48:310,background:'var(--bg-secondary)',borderRight:'1px solid var(--border-subtle)',display:'flex',flexDirection:'column',transition:'width 0.25s,min-width 0.25s',overflow:'hidden'}}>
-        <div style={{padding:12,display:'flex',alignItems:'center',justifyContent:sidebarCollapsed?'center':'space-between',borderBottom:'1px solid var(--border-subtle)',cursor:'pointer',minHeight:44}} onClick={()=>setSidebarCollapsed(!sidebarCollapsed)}>
-          {!sidebarCollapsed&&<span style={{fontSize:11,fontWeight:700,letterSpacing:1.5,textTransform:'uppercase',color:'var(--accent-blue)'}}>Filters</span>}
-          <span style={{fontSize:18,color:'var(--accent-blue)',lineHeight:1}}>{sidebarCollapsed?'▸':'◂'}</span>
-        </div>
-        {!sidebarCollapsed&&(
-          <div style={{flex:1,overflowY:'auto',padding:16,display:'flex',flexDirection:'column',gap:20}}>
-            <FilterSection title="Census Region">
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6}}>
-                {Object.keys(CENSUS_REGIONS).map(r=>(
-                  <button key={r} onClick={()=>handleRegionSelect(r)} style={{padding:'8px 4px',borderRadius:6,border:'1px solid',fontSize:12,fontWeight:600,cursor:'pointer',background:selectedRegion===r?'rgba(96,165,250,0.12)':'transparent',borderColor:selectedRegion===r?'var(--accent-blue)':'var(--border-subtle)',color:selectedRegion===r?'var(--accent-blue)':'var(--text-secondary)',transition:'all 0.15s'}}>{r}</button>
-                ))}
-              </div>
-            </FilterSection>
-            <FilterSection title="Population Range">
-              <RangeSlider label="Min" value={popMin} min={0} max={50000000} step={500000} onChange={setPopMin} format={fmtCompact}/>
-              <RangeSlider label="Max" value={popMax} min={0} max={50000000} step={500000} onChange={setPopMax} format={fmtCompact}/>
-            </FilterSection>
-            <FilterSection title="Median Age Range">
-              <RangeSlider label="Min" value={medAgeMin} min={25} max={55} step={0.5} onChange={setMedAgeMin} format={v=>v.toFixed(1)}/>
-              <RangeSlider label="Max" value={medAgeMax} min={25} max={55} step={0.5} onChange={setMedAgeMax} format={v=>v.toFixed(1)}/>
-            </FilterSection>
-            <FilterSection title="Min. Urbanization %">
-              <RangeSlider label="Urban" value={urbanMin} min={0} max={100} step={5} onChange={setUrbanMin} format={v=>v+'%'}/>
-            </FilterSection>
-            <FilterSection title="Growth (2020–25)">
-              <div style={{display:'flex',gap:5}}>
-                {[["all","All"],["growing","Growing"],["declining","Declining"]].map(([v,l])=>(
-                  <button key={v} onClick={()=>setGrowthFilter(v)} style={{flex:1,padding:'8px 4px',borderRadius:6,border:'1px solid',fontSize:11,fontWeight:600,cursor:'pointer',background:growthFilter===v?'rgba(96,165,250,0.12)':'transparent',borderColor:growthFilter===v?'var(--accent-blue)':'var(--border-subtle)',color:growthFilter===v?'var(--accent-blue)':'var(--text-secondary)'}}>{l}</button>
-                ))}
-              </div>
-            </FilterSection>
-            <FilterSection title="DMA Rank (Top N)">
-              <RangeSlider label="Top" value={dmaRankMax} min={5} max={50} step={5} onChange={setDmaRankMax} format={v=>String(v)}/>
-            </FilterSection>
-            <FilterSection title="Platforms">
-              <div style={{display:'flex',flexDirection:'column',gap:5}}>
-                {PLATFORM_DATA.map(p=>(
-                  <label key={p.name} style={{display:'flex',alignItems:'center',gap:8,cursor:'pointer',padding:'3px 0',fontSize:12}}>
-                    <input type="checkbox" checked={selectedPlatforms.has(p.name)} onChange={()=>setSelectedPlatforms(prev=>{const n=new Set(prev);if(n.has(p.name))n.delete(p.name);else n.add(p.name);return n;})}/>
-                    <span style={{width:8,height:8,borderRadius:'50%',background:p.color,display:'inline-block',flexShrink:0}}/>
-                    <span style={{color:'var(--text-primary)',fontWeight:500}}>{p.name}</span>
-                    <span style={{marginLeft:'auto',color:'var(--text-tertiary)',fontFamily:'"IBM Plex Mono",monospace',fontSize:10,fontWeight:500}}>{p.pctPop}%</span>
-                  </label>
-                ))}
-              </div>
-            </FilterSection>
-            <div style={{display:'flex',gap:8,paddingTop:10,borderTop:'1px solid var(--border-subtle)'}}>
-              <button onClick={selectAllFiltered} style={{flex:1,padding:10,borderRadius:8,border:'none',background:'rgba(96,165,250,0.15)',color:'var(--accent-blue)',fontSize:11,fontWeight:700,cursor:'pointer'}}>Select All</button>
-              <button onClick={clearSelection} style={{flex:1,padding:10,borderRadius:8,border:'1px solid rgba(248,113,113,0.3)',background:'transparent',color:'var(--accent-red)',fontSize:11,fontWeight:700,cursor:'pointer'}}>Clear</button>
-            </div>
-            <div style={{fontSize:11,color:'var(--text-tertiary)',textAlign:'center'}}>{filteredStates.length} match · {selectedStates.size} selected</div>
-          </div>
-        )}
+function renderGeoTab(summary){
+  if(!summary)return `<div class="empty-state"><div class="empty-icon">🎯</div><div class="empty-text">Select states on the map or use region / radial filters to begin your media plan</div></div>`;
+  const sorted=[...summary.states].sort((a,b)=>((b.pop2025-b.pop2020)/b.pop2020)-((a.pop2025-a.pop2020)/a.pop2020));
+  const tableSorted=[...summary.states].sort((a,b)=>b.pop2025-a.pop2025);
+  return `
+    <div class="hero-card">
+      <div class="hero-label">Est. Reachable Population</div>
+      <div class="hero-value">${fmt(summary.totalPop)}</div>
+      <div class="hero-sub">${fmtPct(summary.usPct)} of U.S. · ${summary.states.length} state${summary.states.length!==1?'s':''}</div>
+    </div>
+    <div class="metric-grid">
+      <div class="metric-card"><div class="metric-label">5-Yr Growth</div><div class="metric-value" style="color:${summary.growthPct>0?'var(--green)':'var(--red)'}">${(summary.growthPct>0?'+':'')+summary.growthPct.toFixed(1)}%</div></div>
+      <div class="metric-card"><div class="metric-label">Med. Age</div><div class="metric-value" style="color:var(--cyan)">${summary.avgAge.toFixed(1)}</div></div>
+      <div class="metric-card"><div class="metric-label">Urban %</div><div class="metric-value" style="color:var(--purple)">${summary.avgUrban.toFixed(0)}%</div></div>
+      <div class="metric-card"><div class="metric-label">Net Migration</div><div class="metric-value" style="color:var(--green)">${fmtCompact(summary.totalIntlMig+summary.totalDomMig)}</div></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Ethnic Composition (weighted)</div>
+      <div class="eth-bar">
+        <div style="width:${summary.avgWhite}%;background:var(--cyan)"></div>
+        <div style="width:${summary.avgBlack}%;background:var(--purple)"></div>
+        <div style="width:${summary.avgHisp}%;background:var(--yellow)"></div>
+        <div style="flex:1;background:var(--bg-3)"></div>
       </div>
-
-      {/* ═══ CENTER MAP ═══ */}
-      <div style={{flex:1,display:'flex',flexDirection:'column',minWidth:0}}>
-        {/* Top bar */}
-        <div style={{padding:'8px 16px',borderBottom:'1px solid var(--border-subtle)',display:'flex',alignItems:'center',justifyContent:'space-between',background:'var(--bg-secondary)',gap:12,flexWrap:'wrap'}}>
-          <div style={{display:'flex',alignItems:'center',gap:10}}>
-            <div style={{width:30,height:30,borderRadius:7,background:'linear-gradient(135deg,var(--accent-blue),var(--accent-cyan))',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:800,color:'var(--bg-primary)'}}>M</div>
-            <div>
-              <div style={{fontSize:14,fontWeight:700,color:'var(--text-primary)',letterSpacing:-0.3}}>MediaScope Planner</div>
-              <div style={{fontSize:9,color:'var(--text-muted)',letterSpacing:0.8,fontWeight:600,textTransform:'uppercase'}}>Census 2025 · DMA 2026</div>
-            </div>
-          </div>
-          {/* Selection mode toggle */}
-          <div style={{display:'flex',gap:2,background:'var(--bg-primary)',borderRadius:8,padding:2}}>
-            {[['state','🗺 States'],['metro','📍 Metros'],['radial','◎ Radius']].map(([m,l])=>(
-              <button key={m} onClick={()=>setSelectionMode(m)} style={{padding:'6px 14px',borderRadius:6,border:'none',fontSize:11,fontWeight:600,cursor:'pointer',background:selectionMode===m?'var(--accent-blue)':'transparent',color:selectionMode===m?'var(--bg-primary)':'var(--text-tertiary)',transition:'all 0.15s'}}>{l}</button>
-            ))}
-          </div>
-          {/* Map color mode */}
-          <div style={{display:'flex',gap:4}}>
-            {[["population","Population"],["growth","Growth"],["age","Med. Age"],["urban","Urban"]].map(([v,l])=>(
-              <button key={v} onClick={()=>setMapView(v)} style={{padding:'5px 10px',borderRadius:6,border:'1px solid',fontSize:10,fontWeight:600,cursor:'pointer',background:mapView===v?'rgba(96,165,250,0.12)':'transparent',borderColor:mapView===v?'var(--accent-blue)':'var(--border-subtle)',color:mapView===v?'var(--accent-blue)':'var(--text-muted)',transition:'all 0.15s'}}>{l}</button>
-            ))}
-          </div>
-        </div>
-
-        {/* Map */}
-        <div style={{flex:1,position:'relative',overflow:'hidden'}}>
-          <USMap selectedStates={selectedStates} filteredAbbrs={filteredAbbrs} onToggleState={toggleState}
-            onHoverState={setHoveredState} hoveredState={hoveredState} mapView={mapView}
-            selectedDMAs={selectedDMAs} onToggleDMA={toggleDMA} dmaRankMax={dmaRankMax}
-            selectionMode={selectionMode} radialCenter={radialCenter} radialRadius={radialRadius}
-            onRadialChange={handleRadialChange}/>
-
-          {/* Legend */}
-          <div style={{position:'absolute',bottom:14,left:14,background:'rgba(16,22,35,0.92)',borderRadius:10,padding:'10px 14px',border:'1px solid var(--border-subtle)',backdropFilter:'blur(10px)'}}>
-            <div style={{fontSize:10,fontWeight:700,color:'var(--text-tertiary)',letterSpacing:0.8,marginBottom:6,textTransform:'uppercase'}}>
-              {mapView==='population'?'Population':mapView==='growth'?'Growth 2020–25':mapView==='age'?'Median Age':'Urban %'}
-            </div>
-            <div style={{display:'flex',alignItems:'center',gap:6}}>
-              <div style={{width:80,height:6,borderRadius:3,background:'linear-gradient(to right, #121a28, #1a5a45, #34d399)'}}/>
-              <span style={{fontSize:9,color:'var(--text-tertiary)',fontWeight:500}}>Low → High</span>
-            </div>
-            <div style={{display:'flex',alignItems:'center',gap:6,marginTop:5}}>
-              <div style={{width:8,height:8,borderRadius:'50%',background:'var(--accent-yellow)'}}/>
-              <span style={{fontSize:9,color:'var(--text-tertiary)',fontWeight:500}}>DMA Markets</span>
-            </div>
-            {selectionMode==='radial'&&<div style={{marginTop:5,fontSize:9,color:'var(--accent-blue)',fontWeight:600}}>Click & drag to set radius</div>}
-          </div>
-
-          {/* Tooltip */}
-          {hoveredData && (
-            <div className="map-tooltip" style={{top:14,left:'50%',transform:'translateX(-50%)'}}>
-              <div style={{fontSize:14,fontWeight:700,color:'var(--text-primary)',marginBottom:6}}>{hoveredData.name}</div>
-              <div style={{display:'grid',gridTemplateColumns:'auto auto',gap:'4px 20px',fontSize:12}}>
-                <span style={{color:'var(--text-tertiary)'}}>Population</span><span style={{color:'var(--text-primary)',fontFamily:'"IBM Plex Mono",monospace',fontWeight:500}}>{fmt(hoveredData.pop2025)}</span>
-                <span style={{color:'var(--text-tertiary)'}}>Growth</span><span style={{color:hoveredGrowth>0?'var(--accent-green)':'var(--accent-red)',fontFamily:'"IBM Plex Mono",monospace',fontWeight:600}}>{hoveredGrowth>0?'+':''}{hoveredGrowth.toFixed(1)}%</span>
-                <span style={{color:'var(--text-tertiary)'}}>Med. Age</span><span style={{color:'var(--text-primary)',fontFamily:'"IBM Plex Mono",monospace',fontWeight:500}}>{hoveredData.medAge}</span>
-                <span style={{color:'var(--text-tertiary)'}}>Urban</span><span style={{color:'var(--text-primary)',fontFamily:'"IBM Plex Mono",monospace',fontWeight:500}}>{hoveredData.urban}%</span>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* ═══ RIGHT PANEL ═══ */}
-      <div style={{width:390,minWidth:390,background:'var(--bg-secondary)',borderLeft:'1px solid var(--border-subtle)',display:'flex',flexDirection:'column',overflow:'hidden'}}>
-        <div style={{display:'flex',borderBottom:'1px solid var(--border-subtle)'}}>
-          {[["geo","Geography"],["dma","DMA"],["platforms","Platforms"],["summary","Brief"]].map(([k,l])=>(
-            <button key={k} onClick={()=>setActiveTab(k)} style={{flex:1,padding:'12px 6px',border:'none',borderBottom:activeTab===k?'2px solid var(--accent-blue)':'2px solid transparent',background:'transparent',color:activeTab===k?'var(--accent-blue)':'var(--text-muted)',fontSize:11,fontWeight:700,cursor:'pointer',letterSpacing:0.4,textTransform:'uppercase',transition:'all 0.15s'}}>{l}</button>
-          ))}
-        </div>
-        <div style={{flex:1,overflowY:'auto',padding:16}}>
-
-          {/* GEO TAB */}
-          {activeTab==="geo"&&(
-            <div style={{display:'flex',flexDirection:'column',gap:14}}>
-              {summary?(<>
-                <div style={{background:'linear-gradient(135deg,rgba(96,165,250,0.08),rgba(52,211,153,0.06))',borderRadius:12,padding:20,border:'1px solid rgba(96,165,250,0.2)'}}>
-                  <div style={{fontSize:10,fontWeight:700,color:'var(--accent-blue)',letterSpacing:1.2,textTransform:'uppercase',marginBottom:6}}>Est. Reachable Population</div>
-                  <div style={{fontSize:34,fontWeight:800,color:'var(--text-primary)',letterSpacing:-1,fontFamily:'"IBM Plex Mono",monospace'}}>{fmt(summary.totalPop)}</div>
-                  <div style={{fontSize:12,color:'var(--text-secondary)',marginTop:4,fontWeight:500}}>{fmtPct(summary.usPct)} of U.S. · {summary.states.length} state{summary.states.length!==1?'s':''}</div>
-                </div>
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
-                  <MetricCard label="5-Yr Growth" value={(summary.growthPct>0?'+':'')+summary.growthPct.toFixed(1)+'%'} color={summary.growthPct>0?'var(--accent-green)':'var(--accent-red)'}/>
-                  <MetricCard label="Med. Age" value={summary.avgAge.toFixed(1)} color="var(--accent-cyan)"/>
-                  <MetricCard label="Urban %" value={summary.avgUrban.toFixed(0)+'%'} color="var(--accent-purple)"/>
-                  <MetricCard label="Net Migration" value={fmtCompact(summary.totalIntlMig+summary.totalDomMig)} color="var(--accent-green)"/>
-                </div>
-                <div style={{background:'var(--bg-card)',borderRadius:10,padding:14,border:'1px solid var(--border-subtle)'}}>
-                  <div style={{fontSize:10,fontWeight:700,color:'var(--text-secondary)',letterSpacing:0.8,textTransform:'uppercase',marginBottom:10}}>Ethnic Composition (weighted)</div>
-                  <div style={{display:'flex',height:8,borderRadius:4,overflow:'hidden',marginBottom:8}}>
-                    <div style={{width:summary.avgWhite+'%',background:'var(--accent-cyan)',transition:'width 0.3s'}}/>
-                    <div style={{width:summary.avgBlack+'%',background:'var(--accent-purple)',transition:'width 0.3s'}}/>
-                    <div style={{width:summary.avgHisp+'%',background:'var(--accent-yellow)',transition:'width 0.3s'}}/>
-                    <div style={{flex:1,background:'var(--bg-tertiary)'}}/>
-                  </div>
-                  <div style={{display:'flex',gap:14,fontSize:11,color:'var(--text-secondary)',fontWeight:500}}>
-                    <span><span style={{color:'var(--accent-cyan)'}}>●</span> White {summary.avgWhite.toFixed(1)}%</span>
-                    <span><span style={{color:'var(--accent-purple)'}}>●</span> Black {summary.avgBlack.toFixed(1)}%</span>
-                    <span><span style={{color:'var(--accent-yellow)'}}>●</span> Hisp. {summary.avgHisp.toFixed(1)}%</span>
-                  </div>
-                </div>
-                <div style={{background:'var(--bg-card)',borderRadius:10,padding:14,border:'1px solid var(--border-subtle)'}}>
-                  <div style={{fontSize:10,fontWeight:700,color:'var(--text-secondary)',letterSpacing:0.8,textTransform:'uppercase',marginBottom:10}}>State Growth (2020–25)</div>
-                  <div style={{display:'flex',flexDirection:'column',gap:5,maxHeight:220,overflowY:'auto'}}>
-                    {[...summary.states].sort((a,b)=>((b.pop2025-b.pop2020)/b.pop2020)-((a.pop2025-a.pop2020)/a.pop2020)).map(s=>{
-                      const g=((s.pop2025-s.pop2020)/s.pop2020)*100;
-                      return <div key={s.abbr} style={{display:'flex',alignItems:'center',gap:8,fontSize:11}}>
-                        <span style={{width:26,color:'var(--text-secondary)',fontWeight:600,flexShrink:0}}>{s.abbr}</span>
-                        <div style={{flex:1,height:7,background:'var(--bg-tertiary)',borderRadius:4,overflow:'hidden'}}>
-                          <div style={{width:Math.min(100,Math.abs(g)/11*100)+'%',height:'100%',borderRadius:4,background:g>0?'var(--accent-green)':'var(--accent-red)',transition:'width 0.3s'}}/>
-                        </div>
-                        <span style={{width:48,textAlign:'right',fontFamily:'"IBM Plex Mono",monospace',fontSize:10,color:g>0?'var(--accent-green)':'var(--accent-red)',fontWeight:600,flexShrink:0}}>{g>0?'+':''}{g.toFixed(1)}%</span>
-                      </div>;
-                    })}
-                  </div>
-                </div>
-                <div style={{background:'var(--bg-card)',borderRadius:10,padding:14,border:'1px solid var(--border-subtle)'}}>
-                  <div style={{fontSize:10,fontWeight:700,color:'var(--text-secondary)',letterSpacing:0.8,textTransform:'uppercase',marginBottom:10}}>State Detail</div>
-                  <div style={{overflowX:'auto'}}>
-                    <table style={{width:'100%',borderCollapse:'collapse',fontSize:11}}>
-                      <thead><tr style={{borderBottom:'1px solid var(--border-subtle)'}}>
-                        {['State','Pop','Growth','Age','Urban','Employer'].map(h=><th key={h} style={{padding:'7px 5px',textAlign:'left',color:'var(--text-tertiary)',fontWeight:700,fontSize:9,letterSpacing:0.5,whiteSpace:'nowrap'}}>{h}</th>)}
-                      </tr></thead>
-                      <tbody>{[...summary.states].sort((a,b)=>b.pop2025-a.pop2025).map(s=>{
-                        const g=((s.pop2025-s.pop2020)/s.pop2020)*100;
-                        return <tr key={s.abbr} style={{borderBottom:'1px solid rgba(30,42,66,0.5)'}}>
-                          <td style={{padding:'6px 5px',fontWeight:600,color:'var(--text-primary)'}}>{s.abbr}</td>
-                          <td style={{padding:'6px 5px',fontFamily:'"IBM Plex Mono",monospace',fontSize:10,color:'var(--text-primary)',fontWeight:500}}>{fmtCompact(s.pop2025)}</td>
-                          <td style={{padding:'6px 5px',fontFamily:'"IBM Plex Mono",monospace',fontSize:10,color:g>0?'var(--accent-green)':'var(--accent-red)',fontWeight:600}}>{g>0?'+':''}{g.toFixed(1)}%</td>
-                          <td style={{padding:'6px 5px',fontFamily:'"IBM Plex Mono",monospace',fontSize:10,color:'var(--text-secondary)',fontWeight:500}}>{s.medAge}</td>
-                          <td style={{padding:'6px 5px',fontFamily:'"IBM Plex Mono",monospace',fontSize:10,color:'var(--text-secondary)',fontWeight:500}}>{s.urban}%</td>
-                          <td style={{padding:'6px 5px',fontSize:10,color:'var(--text-tertiary)',maxWidth:80,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{s.topEmployer}</td>
-                        </tr>;
-                      })}</tbody>
-                    </table>
-                  </div>
-                </div>
-              </>):<EmptyState message="Select states on the map or use region/radial filters to begin your media plan"/>}
-            </div>
-          )}
-
-          {/* DMA TAB */}
-          {activeTab==="dma"&&(
-            <div style={{display:'flex',flexDirection:'column',gap:12}}>
-              <div style={{fontSize:11,color:'var(--text-tertiary)',fontWeight:500}}>Switch to <strong style={{color:'var(--accent-blue)'}}>Metros</strong> mode to click DMA dots, or select below.</div>
-              {selectedDMAs.size>0&&(
-                <div style={{background:'linear-gradient(135deg,rgba(251,191,36,0.08),rgba(251,191,36,0.03))',borderRadius:12,padding:16,border:'1px solid rgba(251,191,36,0.25)'}}>
-                  <div style={{fontSize:10,fontWeight:700,color:'var(--accent-yellow)',letterSpacing:1.2,textTransform:'uppercase',marginBottom:4}}>DMA Reach</div>
-                  <div style={{fontSize:30,fontWeight:800,color:'var(--text-primary)',fontFamily:'"IBM Plex Mono",monospace'}}>{fmt(DMA_DATA.filter(d=>selectedDMAs.has(d.rank)).reduce((a,d)=>a+d.tvHH,0))}</div>
-                  <div style={{fontSize:12,color:'var(--text-secondary)',fontWeight:500}}>TV Households · {DMA_DATA.filter(d=>selectedDMAs.has(d.rank)).reduce((a,d)=>a+d.pct,0).toFixed(2)}% of U.S.</div>
-                </div>
-              )}
-              {DMA_DATA.filter(d=>d.rank<=dmaRankMax).map(d=>{
-                const isSel=selectedDMAs.has(d.rank);
-                return <div key={d.rank} onClick={()=>toggleDMA(d.rank)} style={{display:'flex',alignItems:'center',gap:8,padding:'9px 10px',borderRadius:8,cursor:'pointer',background:isSel?'rgba(251,191,36,0.06)':'transparent',border:'1px solid '+(isSel?'rgba(251,191,36,0.25)':'transparent'),transition:'all 0.15s'}}>
-                  <span style={{width:24,height:24,borderRadius:6,display:'flex',alignItems:'center',justifyContent:'center',fontSize:9,fontWeight:700,background:isSel?'var(--accent-yellow)':'var(--bg-tertiary)',color:isSel?'var(--bg-primary)':'var(--text-muted)',flexShrink:0}}>#{d.rank}</span>
-                  <div style={{flex:1,minWidth:0}}><div style={{fontSize:12,fontWeight:600,color:'var(--text-primary)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{d.market}</div></div>
-                  <div style={{textAlign:'right',flexShrink:0}}>
-                    <div style={{fontSize:11,fontFamily:'"IBM Plex Mono",monospace',color:'var(--text-primary)',fontWeight:500}}>{fmtCompact(d.tvHH)}</div>
-                    <div style={{fontSize:9,color:'var(--text-muted)',fontWeight:500}}>{d.pct}% US</div>
-                  </div>
-                </div>;
-              })}
-            </div>
-          )}
-
-          {/* PLATFORMS TAB */}
-          {activeTab==="platforms"&&(
-            <div style={{display:'flex',flexDirection:'column',gap:12}}>
-              <div style={{fontSize:11,color:'var(--text-tertiary)',fontWeight:500}}>U.S. daily reach per platform. Region estimates scale to your selected geography.</div>
-              {PLATFORM_DATA.filter(p=>selectedPlatforms.has(p.name)).map(p=>{
-                const regionPop=summary?summary.totalPop:341784857;
-                const estReach=Math.round(regionPop*p.pctPop/100);
-                return <div key={p.name} style={{background:'var(--bg-card)',borderRadius:10,padding:14,border:'1px solid var(--border-subtle)'}}>
-                  <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
-                    <div style={{width:10,height:10,borderRadius:'50%',background:p.color,flexShrink:0}}/>
-                    <span style={{fontSize:14,fontWeight:700,color:'var(--text-primary)'}}>{p.name}</span>
-                    <span style={{marginLeft:'auto',fontSize:11,color:'var(--text-tertiary)',fontWeight:500}}>DAU: {p.dauUS}</span>
-                  </div>
-                  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8}}>
-                    <div><div style={{color:'var(--text-muted)',fontSize:9,fontWeight:600,textTransform:'uppercase',marginBottom:2}}>U.S. DAU</div><div style={{color:'var(--text-primary)',fontFamily:'"IBM Plex Mono",monospace',fontWeight:500,fontSize:12}}>{p.dauUS}</div></div>
-                    <div><div style={{color:'var(--text-muted)',fontSize:9,fontWeight:600,textTransform:'uppercase',marginBottom:2}}>U.S. MAU</div><div style={{color:'var(--text-primary)',fontFamily:'"IBM Plex Mono",monospace',fontWeight:500,fontSize:12}}>{p.mauUS}</div></div>
-                    <div><div style={{color:'var(--text-muted)',fontSize:9,fontWeight:600,textTransform:'uppercase',marginBottom:2}}>Region DAU</div><div style={{color:'var(--accent-green)',fontFamily:'"IBM Plex Mono",monospace',fontWeight:700,fontSize:12}}>{fmtCompact(estReach)}</div></div>
-                  </div>
-                  <div style={{marginTop:10,height:6,background:'var(--bg-tertiary)',borderRadius:3,overflow:'hidden'}}><div style={{width:p.pctPop+'%',height:'100%',background:p.color,borderRadius:3,opacity:0.65}}/></div>
-                  <div style={{fontSize:9,color:'var(--text-muted)',marginTop:4,fontWeight:500}}>{p.pctPop}% daily penetration of U.S. population</div>
-                </div>;
-              })}
-            </div>
-          )}
-
-          {/* BRIEF TAB */}
-          {activeTab==="summary"&&(
-            <div style={{display:'flex',flexDirection:'column',gap:14}}>
-              {summary?(<>
-                <div style={{fontSize:14,fontWeight:700,color:'var(--text-primary)'}}>Media Plan Brief</div>
-                <div style={{background:'var(--bg-card)',borderRadius:10,padding:16,border:'1px solid var(--border-subtle)',fontSize:12,lineHeight:1.8}}>
-                  <div style={{fontWeight:700,color:'var(--accent-blue)',marginBottom:8,fontSize:11,letterSpacing:0.5,textTransform:'uppercase'}}>Geographic Targeting</div>
-                  <div style={{color:'var(--text-secondary)'}}>States: <span style={{color:'var(--text-primary)',fontWeight:600}}>{summary.states.map(s=>s.abbr).join(', ')}</span></div>
-                  <div style={{color:'var(--text-secondary)'}}>Population: <span style={{color:'var(--text-primary)',fontFamily:'"IBM Plex Mono",monospace',fontWeight:600}}>{fmt(summary.totalPop)}</span></div>
-                  <div style={{color:'var(--text-secondary)'}}>U.S. Share: <span style={{color:'var(--text-primary)',fontWeight:600}}>{fmtPct(summary.usPct)}</span></div>
-                  <div style={{color:'var(--text-secondary)'}}>Growth: <span style={{color:summary.growthPct>0?'var(--accent-green)':'var(--accent-red)',fontWeight:700}}>{(summary.growthPct>0?'+':'')+summary.growthPct.toFixed(2)}%</span></div>
-                  <div style={{color:'var(--text-secondary)'}}>Wtd. Med. Age: <span style={{color:'var(--text-primary)',fontWeight:600}}>{summary.avgAge.toFixed(1)}</span></div>
-                  <div style={{color:'var(--text-secondary)'}}>Urbanization: <span style={{color:'var(--text-primary)',fontWeight:600}}>{summary.avgUrban.toFixed(0)}%</span></div>
-                </div>
-                <div style={{background:'var(--bg-card)',borderRadius:10,padding:16,border:'1px solid var(--border-subtle)',fontSize:12,lineHeight:1.8}}>
-                  <div style={{fontWeight:700,color:'var(--accent-yellow)',marginBottom:8,fontSize:11,letterSpacing:0.5,textTransform:'uppercase'}}>DMA Markets</div>
-                  {selectedDMAs.size>0?(<>
-                    <div style={{color:'var(--text-secondary)'}}>Markets: <span style={{color:'var(--text-primary)',fontWeight:600}}>{DMA_DATA.filter(d=>selectedDMAs.has(d.rank)).map(d=>d.market).join(', ')}</span></div>
-                    <div style={{color:'var(--text-secondary)'}}>TV HH: <span style={{color:'var(--text-primary)',fontFamily:'"IBM Plex Mono",monospace',fontWeight:600}}>{fmt(DMA_DATA.filter(d=>selectedDMAs.has(d.rank)).reduce((a,d)=>a+d.tvHH,0))}</span></div>
-                  </>):<div style={{color:'var(--text-muted)'}}>No DMA markets selected</div>}
-                </div>
-                <div style={{background:'var(--bg-card)',borderRadius:10,padding:16,border:'1px solid var(--border-subtle)',fontSize:12,lineHeight:1.8}}>
-                  <div style={{fontWeight:700,color:'var(--accent-purple)',marginBottom:8,fontSize:11,letterSpacing:0.5,textTransform:'uppercase'}}>Platform Reach</div>
-                  {PLATFORM_DATA.filter(p=>selectedPlatforms.has(p.name)).map(p=>{
-                    const reach=Math.round(summary.totalPop*p.pctPop/100);
-                    return <div key={p.name} style={{display:'flex',justifyContent:'space-between',color:'var(--text-secondary)'}}>
-                      <span style={{fontWeight:500}}>{p.name}</span><span style={{color:'var(--text-primary)',fontFamily:'"IBM Plex Mono",monospace',fontWeight:600,fontSize:11}}>~{fmtCompact(reach)} DAU</span>
-                    </div>;
-                  })}
-                </div>
-                <div style={{background:'var(--bg-card)',borderRadius:10,padding:16,border:'1px solid var(--border-subtle)',fontSize:12,lineHeight:1.8}}>
-                  <div style={{fontWeight:700,color:'var(--accent-cyan)',marginBottom:8,fontSize:11,letterSpacing:0.5,textTransform:'uppercase'}}>Demographics</div>
-                  <div style={{color:'var(--text-secondary)'}}>White: <span style={{color:'var(--text-primary)',fontWeight:600}}>{summary.avgWhite.toFixed(1)}%</span></div>
-                  <div style={{color:'var(--text-secondary)'}}>Black: <span style={{color:'var(--text-primary)',fontWeight:600}}>{summary.avgBlack.toFixed(1)}%</span></div>
-                  <div style={{color:'var(--text-secondary)'}}>Hispanic: <span style={{color:'var(--text-primary)',fontWeight:600}}>{summary.avgHisp.toFixed(1)}%</span></div>
-                  <div style={{color:'var(--text-secondary)'}}>Births/yr: <span style={{color:'var(--text-primary)',fontWeight:600}}>{fmt(summary.totalBirths)}</span></div>
-                  <div style={{color:'var(--text-secondary)'}}>Deaths/yr: <span style={{color:'var(--text-primary)',fontWeight:600}}>{fmt(summary.totalDeaths)}</span></div>
-                  <div style={{color:'var(--text-secondary)'}}>Intl. Migration: <span style={{color:'var(--text-primary)',fontWeight:600}}>{fmt(summary.totalIntlMig)}</span></div>
-                  <div style={{color:'var(--text-secondary)'}}>Dom. Migration: <span style={{color:summary.totalDomMig>0?'var(--accent-green)':'var(--accent-red)',fontWeight:700}}>{fmt(summary.totalDomMig)}</span></div>
-                </div>
-                <div style={{background:'var(--bg-card)',borderRadius:10,padding:14,border:'1px solid var(--border-subtle)',fontSize:10,color:'var(--text-muted)',lineHeight:1.6,fontWeight:500}}>
-                  <strong style={{color:'var(--text-tertiary)'}}>Sources:</strong> Census Bureau Vintage 2025 · CDC PLACES 2025 · Nielsen DMA 2026 · Platform Q4 2025 DAU/MAU · SBA Advocacy 2025 · BLS OES 2024
-                </div>
-              </>):<EmptyState message="Build your targeting plan by selecting states and DMA markets, then review the brief here"/>}
-            </div>
-          )}
-        </div>
+      <div class="eth-legend">
+        <span><span style="color:var(--cyan)">●</span> White ${summary.avgWhite.toFixed(1)}%</span>
+        <span><span style="color:var(--purple)">●</span> Black ${summary.avgBlack.toFixed(1)}%</span>
+        <span><span style="color:var(--yellow)">●</span> Hisp. ${summary.avgHisp.toFixed(1)}%</span>
       </div>
     </div>
-  );
+    <div class="card">
+      <div class="card-title">State Growth (2020–25)</div>
+      <div style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:4px">
+        ${sorted.map(s=>{const g=((s.pop2025-s.pop2020)/s.pop2020)*100;return `<div class="growth-row"><span class="growth-abbr">${s.abbr}</span><div class="growth-bar-bg"><div class="growth-bar-fill" style="width:${Math.min(100,Math.abs(g)/11*100)}%;background:${g>0?'var(--green)':'var(--red)'}"></div></div><span class="growth-pct" style="color:${g>0?'var(--green)':'var(--red)'}">${g>0?'+':''}${g.toFixed(1)}%</span></div>`;}).join('')}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">State Detail</div>
+      <div style="overflow-x:auto">
+        <table class="detail-table"><thead><tr>${['State','Pop','Growth','Age','Urban','Employer'].map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>
+        ${tableSorted.map(s=>{const g=((s.pop2025-s.pop2020)/s.pop2020)*100;return `<tr><td style="font-weight:600">${s.abbr}</td><td style="font-family:var(--mono);font-size:10px;font-weight:500">${fmtCompact(s.pop2025)}</td><td style="font-family:var(--mono);font-size:10px;font-weight:600;color:${g>0?'var(--green)':'var(--red)'}">${g>0?'+':''}${g.toFixed(1)}%</td><td style="font-family:var(--mono);font-size:10px;color:var(--text-1)">${s.medAge}</td><td style="font-family:var(--mono);font-size:10px;color:var(--text-1)">${s.urban}%</td><td style="font-size:10px;color:var(--text-3);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.topEmployer)}</td></tr>`;}).join('')}
+        </tbody></table>
+      </div>
+    </div>`;
 }
 
-ReactDOM.render(<App/>, document.getElementById('root'));
+function renderDMATab(){
+  const selDMAs=DMA_DATA.filter(d=>state.selectedDMAs.has(d.rank));
+  let html=`<div style="font-size:11px;color:var(--text-3);font-weight:500;margin-bottom:4px">Switch to <strong style="color:var(--blue)">Metros</strong> mode to click DMA dots, or select below.</div>`;
+  if(selDMAs.length){
+    html+=`<div class="dma-hero"><div class="hero-label" style="color:var(--yellow)">DMA Reach</div><div class="hero-value" style="font-size:28px">${fmt(selDMAs.reduce((a,d)=>a+d.tvHH,0))}</div><div class="hero-sub">TV Households · ${selDMAs.reduce((a,d)=>a+d.pct,0).toFixed(2)}% of U.S.</div></div>`;
+  }
+  DMA_DATA.filter(d=>d.rank<=state.dmaRankMax).forEach(d=>{
+    const isSel=state.selectedDMAs.has(d.rank);
+    html+=`<div class="dma-item${isSel?' selected':''}" data-dma-click="${d.rank}">
+      <span class="dma-rank" style="background:${isSel?'var(--yellow)':'var(--bg-3)'};color:${isSel?'var(--bg-0)':'var(--text-3)'}">#${d.rank}</span>
+      <span class="dma-name">${esc(d.market)}</span>
+      <div class="dma-stats"><div class="dma-hh">${fmtCompact(d.tvHH)}</div><div class="dma-pct">${d.pct}% US</div></div>
+    </div>`;
+  });
+  return html;
+}
+
+function renderPlatformsTab(summary){
+  const regionPop=summary?summary.totalPop:US_POP;
+  let html=`<div style="font-size:11px;color:var(--text-3);font-weight:500;margin-bottom:4px">U.S. daily reach per platform. Region estimates scale to your selected geography.</div>`;
+  PLATFORM_DATA.filter(p=>state.selectedPlatforms.has(p.name)).forEach(p=>{
+    const estReach=Math.round(regionPop*p.pctPop/100);
+    html+=`<div class="platform-card">
+      <div class="platform-header"><div class="platform-dot" style="background:${p.color}"></div><span class="platform-title">${esc(p.name)}</span><span class="platform-dau-label">DAU: ${p.dauUS}</span></div>
+      <div class="platform-stats">
+        <div><div class="platform-stat-label">U.S. DAU</div><div class="platform-stat-value">${p.dauUS}</div></div>
+        <div><div class="platform-stat-label">U.S. MAU</div><div class="platform-stat-value">${p.mauUS}</div></div>
+        <div><div class="platform-stat-label">Region DAU</div><div class="platform-stat-value" style="color:var(--green);font-weight:700">${fmtCompact(estReach)}</div></div>
+      </div>
+      <div class="platform-bar"><div class="platform-bar-fill" style="width:${p.pctPop}%;background:${p.color}"></div></div>
+      <div class="platform-penetration">${p.pctPop}% daily penetration of U.S. population</div>
+    </div>`;
+  });
+  return html;
+}
+
+function renderBriefTab(summary){
+  if(!summary)return `<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-text">Build your targeting plan by selecting states and DMA markets, then review the brief here</div></div>`;
+  const selDMAs=DMA_DATA.filter(d=>state.selectedDMAs.has(d.rank));
+  return `
+    <div style="font-size:14px;font-weight:700;margin-bottom:4px">Media Plan Brief</div>
+    <div class="card brief-section">
+      <div class="brief-heading" style="color:var(--blue)">Geographic Targeting</div>
+      <div class="brief-row">States: <strong>${summary.states.map(s=>s.abbr).join(', ')}</strong></div>
+      <div class="brief-row">Population: <strong class="brief-mono">${fmt(summary.totalPop)}</strong></div>
+      <div class="brief-row">U.S. Share: <strong>${fmtPct(summary.usPct)}</strong></div>
+      <div class="brief-row">Growth: <strong style="color:${summary.growthPct>0?'var(--green)':'var(--red)'}">${(summary.growthPct>0?'+':'')+summary.growthPct.toFixed(2)}%</strong></div>
+      <div class="brief-row">Wtd. Med. Age: <strong>${summary.avgAge.toFixed(1)}</strong></div>
+      <div class="brief-row">Urbanization: <strong>${summary.avgUrban.toFixed(0)}%</strong></div>
+    </div>
+    <div class="card brief-section">
+      <div class="brief-heading" style="color:var(--yellow)">DMA Markets</div>
+      ${selDMAs.length?`<div class="brief-row">Markets: <strong>${selDMAs.map(d=>d.market).join(', ')}</strong></div><div class="brief-row">TV HH: <strong class="brief-mono">${fmt(selDMAs.reduce((a,d)=>a+d.tvHH,0))}</strong></div>`:`<div style="color:var(--text-3)">No DMA markets selected</div>`}
+    </div>
+    <div class="card brief-section">
+      <div class="brief-heading" style="color:var(--purple)">Platform Reach</div>
+      ${PLATFORM_DATA.filter(p=>state.selectedPlatforms.has(p.name)).map(p=>{const reach=Math.round(summary.totalPop*p.pctPop/100);return `<div style="display:flex;justify-content:space-between;color:var(--text-1)"><span style="font-weight:500">${esc(p.name)}</span><span style="font-family:var(--mono);font-weight:600;font-size:11px;color:var(--text-0)">~${fmtCompact(reach)} DAU</span></div>`;}).join('')}
+    </div>
+    <div class="card brief-section">
+      <div class="brief-heading" style="color:var(--cyan)">Demographics</div>
+      <div class="brief-row">White: <strong>${summary.avgWhite.toFixed(1)}%</strong></div>
+      <div class="brief-row">Black: <strong>${summary.avgBlack.toFixed(1)}%</strong></div>
+      <div class="brief-row">Hispanic: <strong>${summary.avgHisp.toFixed(1)}%</strong></div>
+      <div class="brief-row">Births/yr: <strong>${fmt(summary.totalBirths)}</strong></div>
+      <div class="brief-row">Deaths/yr: <strong>${fmt(summary.totalDeaths)}</strong></div>
+      <div class="brief-row">Intl. Migration: <strong>${fmt(summary.totalIntlMig)}</strong></div>
+      <div class="brief-row">Dom. Migration: <strong style="color:${summary.totalDomMig>0?'var(--green)':'var(--red)'}">${fmt(summary.totalDomMig)}</strong></div>
+    </div>
+    <div class="card sources-card"><strong>Sources:</strong> Census Bureau Vintage 2025 · CDC PLACES 2025 · Nielsen DMA 2026 · Platform Q4 2025 DAU/MAU · SBA Advocacy 2025 · BLS OES 2024</div>`;
+}
+
+// ════════════════════════════════════════════════════════════
+// SIDEBAR
+// ════════════════════════════════════════════════════════════
+function renderSidebar(){
+  const sb=document.getElementById('sidebar-body');
+  if(!sb)return;
+  if(state.sidebarCollapsed){sb.style.display='none';return;}
+  sb.style.display='flex';
+  // Only re-render counts
+  const countEl=document.getElementById('filter-count');
+  if(countEl) countEl.textContent=`${getFilteredStates().length} match · ${state.selectedStates.size} selected`;
+}
+
+// ════════════════════════════════════════════════════════════
+// FULL RENDER (layout skeleton — called once)
+// ════════════════════════════════════════════════════════════
+function buildLayout(){
+  const app=document.getElementById('app');
+  const filteredStates=getFilteredStates();
+
+  app.innerHTML=`
+  <!-- SIDEBAR -->
+  <div class="sidebar${state.sidebarCollapsed?' collapsed':''}" id="sidebar">
+    <div class="sidebar-header" id="sidebar-toggle-btn">
+      ${state.sidebarCollapsed?'':`<h3>Filters</h3>`}
+      <button class="sidebar-toggle">${state.sidebarCollapsed?'▸':'◂'}</button>
+    </div>
+    <div class="sidebar-body" id="sidebar-body" style="${state.sidebarCollapsed?'display:none':''}">
+      <div class="filter-group">
+        <div class="filter-label">Census Region</div>
+        <div class="btn-grid">
+          ${Object.keys(CENSUS_REGIONS).map(r=>`<button class="btn-pill region-btn${state.selectedRegion===r?' active':''}" data-region="${r}">${r}</button>`).join('')}
+        </div>
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">Population Range</div>
+        <div class="range-row"><span class="range-label">Min</span><span class="range-value" id="popmin-val">${fmtCompact(state.popMin)}</span></div>
+        <input type="range" id="popmin" min="0" max="50000000" step="500000" value="${state.popMin}">
+        <div class="range-row" style="margin-top:6px"><span class="range-label">Max</span><span class="range-value" id="popmax-val">${fmtCompact(state.popMax)}</span></div>
+        <input type="range" id="popmax" min="0" max="50000000" step="500000" value="${state.popMax}">
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">Median Age Range</div>
+        <div class="range-row"><span class="range-label">Min</span><span class="range-value" id="agemin-val">${state.medAgeMin.toFixed(1)}</span></div>
+        <input type="range" id="agemin" min="25" max="55" step="0.5" value="${state.medAgeMin}">
+        <div class="range-row" style="margin-top:6px"><span class="range-label">Max</span><span class="range-value" id="agemax-val">${state.medAgeMax.toFixed(1)}</span></div>
+        <input type="range" id="agemax" min="25" max="55" step="0.5" value="${state.medAgeMax}">
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">Min. Urbanization %</div>
+        <div class="range-row"><span class="range-label">Urban</span><span class="range-value" id="urban-val">${state.urbanMin}%</span></div>
+        <input type="range" id="urbanmin" min="0" max="100" step="5" value="${state.urbanMin}">
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">Growth (2020–25)</div>
+        <div class="btn-row">
+          ${[["all","All"],["growing","Growing"],["declining","Declining"]].map(([v,l])=>`<button class="btn-pill growth-btn${state.growthFilter===v?' active':''}" data-growth="${v}">${l}</button>`).join('')}
+        </div>
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">DMA Rank (Top N)</div>
+        <div class="range-row"><span class="range-label">Top</span><span class="range-value" id="dma-val">${state.dmaRankMax}</span></div>
+        <input type="range" id="dmamax" min="5" max="50" step="5" value="${state.dmaRankMax}">
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">Platforms</div>
+        ${PLATFORM_DATA.map(p=>`<label class="platform-row"><input type="checkbox" data-platform="${p.name}" ${state.selectedPlatforms.has(p.name)?'checked':''}><div class="platform-dot" style="background:${p.color}"></div><span style="font-weight:500">${esc(p.name)}</span><span class="platform-pct">${p.pctPop}%</span></label>`).join('')}
+      </div>
+      <div class="sidebar-actions">
+        <button class="btn-select-all" id="btn-sel-all">Select All</button>
+        <button class="btn-clear" id="btn-clear">Clear</button>
+      </div>
+      <div class="filter-count" id="filter-count">${filteredStates.length} match · ${state.selectedStates.size} selected</div>
+    </div>
+  </div>
+
+  <!-- CENTER -->
+  <div class="center">
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand-icon">M</div>
+        <div><div class="brand-name">MediaScope Planner</div><div class="brand-sub">Census 2025 · DMA 2026</div></div>
+      </div>
+      <div class="mode-toggle" id="mode-toggle">
+        ${[['state','🗺 States'],['metro','📍 Metros'],['radial','◎ Radius']].map(([m,l])=>`<button data-mode="${m}" class="${state.selectionMode===m?'active':''}">${l}</button>`).join('')}
+      </div>
+      <div class="view-btns" id="view-btns">
+        ${[["population","Population"],["growth","Growth"],["age","Med. Age"],["urban","Urban"]].map(([v,l])=>`<button data-view="${v}" class="${state.mapView===v?'active':''}">${l}</button>`).join('')}
+      </div>
+    </div>
+    <div class="map-area">
+      <div id="map-container" style="width:100%;height:100%"></div>
+      <div class="map-legend">
+        <div class="map-legend-title" id="legend-title">${state.mapView==='population'?'Population':state.mapView==='growth'?'Growth 2020–25':state.mapView==='age'?'Median Age':'Urban %'}</div>
+        <div class="legend-row"><div class="legend-bar" style="background:linear-gradient(to right,#0e1520,#145838,#36d49a)"></div><span class="legend-text">Low → High</span></div>
+        <div class="legend-row"><div class="legend-dot" style="background:var(--yellow)"></div><span class="legend-text">DMA Markets</span></div>
+        ${state.selectionMode==='radial'?`<div style="margin-top:4px;font-size:9px;color:var(--blue);font-weight:600">Click & drag to set radius</div>`:''}
+      </div>
+      <div class="map-tooltip" id="map-tooltip" style="display:none;top:12px;left:50%;transform:translateX(-50%)"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="panel">
+    <div class="tabs" id="tabs">
+      ${[["geo","Geography"],["dma","DMA"],["platforms","Platforms"],["summary","Brief"]].map(([k,l])=>`<button data-tab="${k}" class="${state.activeTab===k?'active':''}">${l}</button>`).join('')}
+    </div>
+    <div class="panel-body" id="panel-body"></div>
+  </div>`;
+
+  // Wire up events
+  wireEvents();
+  initMap();
+  renderPanel();
+}
+
+function wireEvents(){
+  // Sidebar toggle
+  document.getElementById('sidebar-toggle-btn').addEventListener('click',()=>{
+    update({sidebarCollapsed:!state.sidebarCollapsed});
+    buildLayout();
+  });
+
+  // Region buttons
+  document.querySelectorAll('.region-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const r=btn.dataset.region;
+      const filtAbbrs=getFilteredAbbrs();
+      if(state.selectedRegion===r){update({selectedRegion:null,selectedStates:new Set()});}
+      else{update({selectedRegion:r,selectedStates:new Set((CENSUS_REGIONS[r]||[]).filter(a=>filtAbbrs.has(a)))});}
+      buildLayout();
+    });
+  });
+
+  // Range sliders
+  function bindRange(id,key,valId,format){
+    const el=document.getElementById(id);
+    if(!el)return;
+    el.addEventListener('input',()=>{
+      state[key]=Number(el.value);
+      const valEl=document.getElementById(valId);
+      if(valEl)valEl.textContent=format(state[key]);
+    });
+    el.addEventListener('change',()=>{
+      update({});renderMap();renderPanel();renderSidebar();
+    });
+  }
+  bindRange('popmin','popMin','popmin-val',fmtCompact);
+  bindRange('popmax','popMax','popmax-val',fmtCompact);
+  bindRange('agemin','medAgeMin','agemin-val',v=>v.toFixed(1));
+  bindRange('agemax','medAgeMax','agemax-val',v=>v.toFixed(1));
+  bindRange('urbanmin','urbanMin','urban-val',v=>v+'%');
+  bindRange('dmamax','dmaRankMax','dma-val',String);
+
+  // Growth filter
+  document.querySelectorAll('.growth-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      update({growthFilter:btn.dataset.growth});
+      buildLayout();
+    });
+  });
+
+  // Platforms
+  document.querySelectorAll('[data-platform]').forEach(cb=>{
+    cb.addEventListener('change',()=>{
+      const plats=new Set(state.selectedPlatforms);
+      if(cb.checked)plats.add(cb.dataset.platform);else plats.delete(cb.dataset.platform);
+      update({selectedPlatforms:plats});renderPanel();
+    });
+  });
+
+  // Select all / clear
+  const selAll=document.getElementById('btn-sel-all');
+  if(selAll)selAll.addEventListener('click',()=>{update({selectedStates:new Set(getFilteredStates().map(s=>s.abbr))});renderMap();renderPanel();renderSidebar();});
+  const clearBtn=document.getElementById('btn-clear');
+  if(clearBtn)clearBtn.addEventListener('click',()=>{update({selectedStates:new Set(),selectedRegion:null,selectedDMAs:new Set(),radialCenter:null,radialRadius:0});renderMap();renderPanel();renderSidebar();});
+
+  // Mode toggle
+  document.getElementById('mode-toggle').addEventListener('click',e=>{
+    const btn=e.target.closest('[data-mode]');
+    if(!btn)return;
+    update({selectionMode:btn.dataset.mode});
+    buildLayout();
+  });
+
+  // View toggle
+  document.getElementById('view-btns').addEventListener('click',e=>{
+    const btn=e.target.closest('[data-view]');
+    if(!btn)return;
+    update({mapView:btn.dataset.view});
+    buildLayout();
+  });
+
+  // Tabs
+  document.getElementById('tabs').addEventListener('click',e=>{
+    const btn=e.target.closest('[data-tab]');
+    if(!btn)return;
+    state.activeTab=btn.dataset.tab;
+    document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('active',b.dataset.tab===state.activeTab));
+    renderPanel();
+  });
+}
+
+// Subscribe to updates for lightweight re-renders
+subscribe(()=>{
+  renderMap();
+  renderPanel();
+  renderSidebar();
+});
+
+// Boot
+buildLayout();
 </script>
 </body>
 </html>
